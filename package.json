@@ -1,0 +1,20 @@
+{
+  "name": "kavi-ki-vidya-api",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "server": "node server/dev-server.js",
+    "start": "node server/dev-server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "multer": "^2.1.1",
+    "openai": "^6.35.0",
+    "ws": "^8.20.0"
+  }
+}
