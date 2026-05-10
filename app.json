@@ -22,6 +22,7 @@
       "bundleIdentifier": "com.anonymous.kavi-ki-vidya"
     },
     "android": {
+      "package": "com.kavikividya.app",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS",
@@ -57,6 +58,13 @@
           "microphonePermission": "Kavi ki Vidya uses the microphone so you can practice live English conversations with the AI coach."
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "8beb355b-0b3a-4d06-b863-2b7296635b90"
+      }
+    },
+    "owner": "nileshgajwani"
   }
 }
