@@ -79,8 +79,8 @@ Use a four-tab bottom navigation structure:
    - Grammar practice
 
 4. **Profile**
-   - Google sign-in
-   - Apple sign-in if practical
+   - Local learner profile
+   - Supabase sync status
    - Daily goal
    - Hindi/Hinglish preference
    - Streak summary
@@ -92,8 +92,8 @@ For prototype scope, Learn and Speak are required. Review and Profile can be lig
 ### Onboarding
 
 - Welcome/sign-in screen
-- Google OAuth sign-in
-- Apple OAuth option if practical in the selected framework
+- Local learner profile sign-in
+- Supabase persistence status
 - Explanation preference screen: Hindi, Hinglish, Both
 - Daily goal screen: 5 minutes, 10 minutes, 15 minutes
 - Optional confidence question: "How comfortable are you speaking English?"
@@ -140,13 +140,12 @@ For prototype scope, Learn and Speak are required. Review and Profile can be lig
 ### 6.1 Onboarding Flow
 
 1. User opens Kavi ki Vidya.
-2. User signs in with Google.
-3. If available, user may choose Apple sign-in.
-4. User selects explanation preference:
+2. User continues with a local learner profile.
+3. User selects explanation preference:
    - Hindi
    - Hinglish
    - Both
-5. User selects a daily goal:
+4. User selects a daily goal:
    - 5 minutes
    - 10 minutes
    - 15 minutes
@@ -496,7 +495,7 @@ Use a small local/mock content set for the first build:
 - Which cross-platform framework will be used?
 - Will voice conversation be real-time or turn-based in the prototype?
 - Which speech-to-text, text-to-speech, and AI conversation stack will be used?
-- Will OAuth be fully wired or mocked for prototype review?
+- How much Supabase persistence detail should be visible in Profile?
 - Will avatar be generated artwork, stock illustration, or custom app asset?
 
 ## 12. Frozen Design Decisions

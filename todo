@@ -1,0 +1,32 @@
+# Kavi ki Vidya Todo
+
+Use this as the user-owned setup checklist. Tell Codex when an item is done; Codex will verify it and then tick it here.
+
+## Backend Storage
+
+- [x] Create a Supabase project for Kavi ki Vidya.
+- [x] Add public Supabase URL and publishable key to the Expo env file.
+- [x] Create the `learner_progress` table in Supabase using the schema in `docs/technical/backend.md`.
+- [x] Add `SUPABASE_URL` to the local server env file.
+- [x] Add `SUPABASE_SERVICE_ROLE_KEY` to the local server env file.
+- [x] Set `PROGRESS_STORAGE_PROVIDER=supabase-rest` when ready to test Supabase-backed progress sync.
+- [x] Run a Supabase-backed progress sync test and confirm progress still appears on the Profile tab.
+
+## Account And Persistence
+
+- [x] Remove Google and Apple OAuth from the current production scope.
+- [x] Use a local learner profile with Supabase-backed progress persistence.
+
+## OpenAI And Voice
+
+- [x] Confirm OpenAI API billing/credits are active for the API key.
+- [x] Confirm `OPENAI_API_KEY` is present only in server-side env files, not in any `EXPO_PUBLIC_*` variable.
+- [x] Test voice transcription from the iOS simulator/device microphone.
+- [ ] Test one complete speaking session: record, transcribe, coach reply, feedback, and review item.
+
+## Release Preparation
+
+- [x] Decide whether the first backend target is Supabase or a custom managed API.
+- [ ] Decide the first internal testing platform: TestFlight, Android internal testing, or both.
+- [ ] Create production privacy copy for speech audio, AI processing, progress sync, and account deletion.
+- [ ] Prepare app store metadata: app name, subtitle, screenshots, support URL, and privacy policy URL.

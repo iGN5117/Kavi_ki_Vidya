@@ -31,6 +31,7 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
 .env*.local
 
 # typescript
@@ -39,3 +40,28 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Keep the custom iOS simulator live-audio bridge tracked while ignoring the
+# rest of the generated native project.
+!/ios/
+/ios/*
+!/ios/Podfile.lock
+!/ios/KavikiVidya/
+/ios/KavikiVidya/*
+!/ios/KavikiVidya/KaviLiveAudio.swift
+!/ios/KavikiVidya/KaviLiveAudioBridge.m
+!/ios/KavikiVidya.xcodeproj/
+/ios/KavikiVidya.xcodeproj/*
+!/ios/KavikiVidya.xcodeproj/project.pbxproj
+
+# local backend output
+server/tmp/
+
+# local tool/workspace metadata
+.codex/
+.graphify_python
+codex-vault/
+graphify-out/.graphify_python
+graphify-out/.graphify_root
+graphify-out/.rebuild.lock
+graphify-out/cache/

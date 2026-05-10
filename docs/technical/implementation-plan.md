@@ -25,8 +25,8 @@ The first implementation will use:
 ## 2. Frozen Technical Decisions
 
 - Framework: Expo React Native + TypeScript + Expo Router.
-- Auth: simulated login for the prototype.
-- Apple sign-in: show only on iOS and keep optional until Apple Developer setup exists.
+- Account model: local learner profile, no Google/Apple OAuth for now.
+- Persistence: Supabase-backed progress storage through the backend API.
 - Voice/AI: real voice pipeline from the beginning.
 - AI provider: OpenAI.
 - Voice model: OpenAI Realtime API using `gpt-realtime`.
@@ -136,7 +136,7 @@ src/
     speak/
   services/
     auth/
-      simulatedAuth.ts
+      sessionClient.ts
     feedback/
       feedbackSchema.ts
     realtime/
@@ -402,7 +402,7 @@ Do not persist:
 
 - Permanent OpenAI API keys.
 - Raw long-running audio recordings.
-- Sensitive OAuth tokens, since auth is simulated.
+- Supabase service role keys or backend bearer sessions in the mobile app.
 
 ## 11. Avatar Asset Strategy
 
@@ -589,15 +589,15 @@ Mitigation:
 - Frame prototype pronunciation feedback as understandability and retry suggestions.
 - Add Azure Pronunciation Assessment later if phoneme/word-level scoring becomes a product requirement.
 
-### Apple Sign-In
+### Account Persistence
 
-Apple sign-in requires platform setup and Apple Developer capabilities for production readiness.
+The current production path does not use Google or Apple OAuth.
 
 Mitigation:
 
-- Show Apple option only on iOS.
-- Mark it optional/unavailable in prototype if setup is missing.
-- Keep simulated auth as the prototype path.
+- Keep a local learner profile in the mobile app.
+- Store progress, streaks, review, and feedback in Supabase through the backend API.
+- Keep Supabase service role keys server-side only.
 
 ### Avatar Consistency
 
@@ -611,9 +611,7 @@ Mitigation:
 
 ## 16. Out Of Scope For First Prototype
 
-- Production backend database.
-- Real Google OAuth.
-- Production Apple Sign-In.
+- Real multi-user auth.
 - Payments or subscriptions.
 - Admin CMS.
 - Offline lesson mode.
@@ -628,8 +626,7 @@ Mitigation:
 - OpenAI Realtime transcription and speech-to-speech overview: https://developers.openai.com/api/docs/guides/realtime-transcription
 - OpenAI text-to-speech guide: https://developers.openai.com/api/docs/guides/text-to-speech
 - OpenAI `gpt-realtime` release notes: https://openai.com/index/introducing-gpt-realtime/
-- Expo authentication guide: https://docs.expo.dev/develop/authentication/
-- Supabase React Native auth guide, useful for future real OAuth: https://supabase.com/docs/guides/auth/quickstarts/react-native
+- Supabase JavaScript client docs: https://supabase.com/docs/reference/javascript/introduction
 
 ## 18. Acceptance Criteria For Implementation
 

@@ -68,7 +68,7 @@ The prototype should use a simple mobile tab structure:
 - Learn: daily path, modules, lessons, streak state.
 - Speak: guided roleplay and open-ended conversation.
 - Review: mistakes, saved phrases, pronunciation/grammar practice.
-- Profile: goals, streak, login, language preferences.
+- Profile: goals, streak, local learner profile, language preferences, Supabase sync status.
 
 For the prototype, Review and Profile can be lightweight if needed, but Learn and Speak are core.
 
@@ -76,9 +76,9 @@ For the prototype, Review and Profile can be lightweight if needed, but Learn an
 
 Prototype onboarding should include:
 
-- Google OAuth sign-in.
-- Apple OAuth if available in the selected app framework and practical for the prototype.
-- Guest mode is optional, but OAuth should be the expected path.
+- Local learner profile sign-in.
+- Supabase-backed persistence for progress, streaks, review, and speaking feedback.
+- Google and Apple OAuth are out of scope for now.
 - User selects explanation preference: Hindi, Hinglish, or both.
 - User selects daily goal: 5 minutes, 10 minutes, or 15 minutes.
 - Optional confidence question: "How comfortable are you speaking English?"
@@ -291,7 +291,7 @@ Suggested content model concepts:
 
 The prototype is successful if a user can:
 
-- Sign in with Google.
+- Continue with a local learner profile.
 - Select Hindi/Hinglish explanation preferences.
 - See a daily learning path with streak progress.
 - Complete a 3-5 minute beginner lesson.
@@ -308,8 +308,7 @@ The prototype is successful if a user can:
 Must have:
 
 - iOS and Android prototype.
-- Google OAuth.
-- Apple OAuth if practical.
+- Local learner profile with Supabase-backed persistence.
 - Learn tab with modules and lessons.
 - 3-5 minute lessons.
 - Lesson overview before each lesson.
