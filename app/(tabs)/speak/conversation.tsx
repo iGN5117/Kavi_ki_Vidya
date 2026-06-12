@@ -3,6 +3,7 @@ import {
   IOSOutputFormat,
   RecordingPresets,
   useAudioPlayer,
+  useAudioPlayerStatus,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
@@ -219,7 +220,14 @@ export default function ConversationScreen() {
   const feedbackHistory = useAppStore((state) => state.feedbackHistory);
   const recorder = useAudioRecorder(speakingRecordingOptions);
   const recorderState = useAudioRecorderState(recorder);
-  const audioPlayer = useAudioPlayer();
+  const [coachAudioSource, setCoachAudioSource] = useState<string | null>(null);
+  const [pendingCoachAudioUrl, setPendingCoachAudioUrl] = useState<string | null>(null);
+  const audioPlayer = useAudioPlayer(coachAudioSource, {
+    downloadFirst: true,
+    keepAudioSessionActive: true,
+    updateInterval: 100,
+  });
+  const audioStatus = useAudioPlayerStatus(audioPlayer);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const scrollRef = useRef<ScrollView>(null);
@@ -292,6 +300,18 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
   }, [turns]);
 
   useEffect(() => {
+    if (!pendingCoachAudioUrl || coachAudioSource !== pendingCoachAudioUrl || !audioStatus.isLoaded) return;
+
+    audioPlayer
+      .seekTo(0)
+      .catch(() => undefined)
+      .finally(() => {
+        audioPlayer.play();
+        setPendingCoachAudioUrl(null);
+      });
+  }, [audioPlayer, audioStatus.isLoaded, coachAudioSource, pendingCoachAudioUrl]);
+
+  useEffect(() => {
     let isMounted = true;
 
     checkPracticeConnection().then((status) => {
@@ -318,6 +338,27 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
     }, 80);
   }
 
+  async function playCoachAudio(audioUrl: string, note: string) {
+    await setAudioModeAsync({
+      allowsRecording: false,
+      playsInSilentMode: true,
+      shouldRouteThroughEarpiece: false,
+      interruptionMode: "doNotMix",
+    });
+    setCoachState("speaking");
+    setConnectionNote(note);
+    setPendingCoachAudioUrl(audioUrl);
+
+    if (coachAudioSource === audioUrl && audioStatus.isLoaded) {
+      await audioPlayer.seekTo(0).catch(() => undefined);
+      audioPlayer.play();
+      setPendingCoachAudioUrl(null);
+      return;
+    }
+
+    setCoachAudioSource(audioUrl);
+  }
+
   async function appendCoachResult(result: VoiceTurnResult, userTurnLabel?: string) {
     setTurns((current) => {
       const nextTurns: ConversationTurn[] = [
@@ -341,20 +382,14 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
       return nextTurns;
     });
     scrollConversationToEnd();
-    setCoachState("speaking");
     if (result.audioUrl) {
-      audioPlayer.replace(result.audioUrl);
-      audioPlayer.play();
-      setConnectionNote("Playing coach audio from the voice endpoint.");
+      await playCoachAudio(result.audioUrl, "Playing coach audio from the voice endpoint.");
     }
     setTimeout(() => setCoachState("neutral"), 1200);
   }
 
-  function replayCoachAudio(audioUrl: string) {
-    setCoachState("speaking");
-    audioPlayer.replace(audioUrl);
-    audioPlayer.play();
-    setConnectionNote("Replaying the coach audio.");
+  async function replayCoachAudio(audioUrl: string) {
+    await playCoachAudio(audioUrl, "Replaying the coach audio.");
     setTimeout(() => setCoachState("neutral"), 1200);
   }
 
