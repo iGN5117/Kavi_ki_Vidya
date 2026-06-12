@@ -2,7 +2,7 @@ services:
   - type: web
     name: kavi-ki-vidya-api
     runtime: node
-    plan: starter
+    plan: free
     buildCommand: npm ci
     startCommand: npm run server
     healthCheckPath: /health
@@ -14,6 +14,8 @@ services:
         sync: false
       - key: OPENAI_TRANSCRIBE_MODEL
         value: gpt-4o-mini-transcribe
+      - key: OPENAI_AUDIO_ASSESSMENT_MODEL
+        value: gpt-audio-1.5
       - key: OPENAI_TEXT_MODEL
         value: gpt-4.1-mini
       - key: OPENAI_TTS_MODEL

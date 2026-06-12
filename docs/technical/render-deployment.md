@@ -10,6 +10,7 @@ Kavi ki Vidya uses Supabase for persistence and a Node API for AI speech work. T
 - Start command: `npm run server`
 - Health check: `/health`
 - Runtime: Node 20
+- Instance type: Free for prototype testing. Free services spin down after inactivity, so the first request can be slow.
 
 ## Required Render Environment Variables
 

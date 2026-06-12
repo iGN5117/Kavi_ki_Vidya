@@ -25,6 +25,13 @@
     "verify:production": "node scripts/verify-production-readiness.js",
     "verify:speak": "node scripts/verify-speak-regressions.js",
     "verify:speak:voice": "node scripts/verify-speak-regressions.js --voice",
+    "android:test:start": "node scripts/android-test-session.js start",
+    "android:test:status": "node scripts/android-test-session.js status",
+    "android:test:cleanup": "node scripts/android-test-session.js cleanup --all",
+    "verify:android": "node scripts/verify-android.js",
+    "verify:android:ui": "node scripts/verify-android-ui.js",
+    "verify:android:managed": "node scripts/run-android-verification-session.js verify-android.js",
+    "verify:android:ui:managed": "node scripts/run-android-verification-session.js verify-android-ui.js",
     "verify:mvp": "npm run typecheck && npm run verify:content && npm run verify:adaptive && npm run verify:persistence && npm run verify:production"
   },
   "dependencies": {
@@ -41,6 +48,7 @@
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
     "express": "^5.2.1",
+    "ffmpeg-static": "^5.3.0",
     "lucide-react-native": "^1.12.0",
     "multer": "^2.1.1",
     "openai": "^6.35.0",

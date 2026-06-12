@@ -1,10 +1,12 @@
 require("dotenv").config();
 
 const cors = require("cors");
+const { spawnSync } = require("node:child_process");
 const crypto = require("node:crypto");
 const express = require("express");
 const fs = require("node:fs");
 const path = require("node:path");
+const ffmpegPath = require("ffmpeg-static");
 const multer = require("multer");
 const OpenAI = require("openai");
 const { toFile } = require("openai/uploads");
@@ -1487,19 +1489,25 @@ function getSafeAudioFilename(audioFile) {
   const originalName = typeof audioFile?.originalname === "string" ? audioFile.originalname : "";
   const cleaned = originalName.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 80);
 
-  if (/\.(flac|m4a|mp3|mp4|mpeg|mpga|oga|ogg|wav|webm)$/i.test(cleaned)) {
+  if (/\.(3gp|aac|caf|flac|m4a|mp3|mp4|mpeg|mpga|oga|ogg|opus|wav|webm)$/i.test(cleaned)) {
     return cleaned;
   }
 
   const extensionByMimeType = {
     "audio/3gpp": "3gp",
+    "audio/aac": "aac",
+    "audio/caf": "caf",
+    "audio/flac": "flac",
     "audio/mp4": "m4a",
     "audio/m4a": "m4a",
     "audio/mpeg": "mp3",
     "audio/ogg": "ogg",
+    "audio/opus": "opus",
     "audio/wav": "wav",
     "audio/webm": "webm",
     "audio/x-caf": "caf",
+    "video/mp4": "mp4",
+    "video/webm": "webm",
   };
   const extension = extensionByMimeType[audioFile?.mimetype] || "m4a";
   const baseName = cleaned.replace(/\.[^.]+$/, "") || "learner";
@@ -1514,6 +1522,105 @@ function getAudioAssessmentFormat(audioFile) {
   if (mimetype.includes("wav") || originalName.endsWith(".wav")) return "wav";
   if (mimetype.includes("mpeg") || mimetype.includes("mp3") || originalName.endsWith(".mp3")) return "mp3";
   return undefined;
+}
+
+function getAudioFileExtension(audioFile) {
+  const originalName = typeof audioFile?.originalname === "string" ? audioFile.originalname.toLowerCase() : "";
+  const match = originalName.match(/\.([a-z0-9]+)$/i);
+  return match ? match[1] : "";
+}
+
+function canConvertAudioForAssessment(audioFile) {
+  const extension = getAudioFileExtension(audioFile);
+  const mimetype = typeof audioFile?.mimetype === "string" ? audioFile.mimetype.toLowerCase() : "";
+  const convertibleExtensions = new Set(["3gp", "aac", "caf", "flac", "m4a", "mp4", "oga", "ogg", "opus", "webm"]);
+  const convertibleMimeTypes = new Set([
+    "audio/3gpp",
+    "audio/aac",
+    "audio/caf",
+    "audio/flac",
+    "audio/m4a",
+    "audio/mp4",
+    "audio/ogg",
+    "audio/opus",
+    "audio/webm",
+    "audio/x-caf",
+    "video/mp4",
+    "video/webm",
+  ]);
+
+  if (convertibleExtensions.has(extension)) return true;
+  if (convertibleMimeTypes.has(mimetype)) return true;
+  return mimetype.startsWith("audio/mp4") || mimetype.startsWith("video/mp4");
+}
+
+function convertAudioForAssessment(audioFile) {
+  if (!ffmpegPath) {
+    throw new Error("ffmpeg-static did not provide a binary path.");
+  }
+
+  const outputPath = path.join("server", "tmp", "audio", `assessment-${Date.now()}-${crypto.randomUUID()}.wav`);
+  const startedAt = Date.now();
+  const result = spawnSync(
+    ffmpegPath,
+    [
+      "-y",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-i",
+      audioFile.path,
+      "-ac",
+      "1",
+      "-ar",
+      "16000",
+      "-f",
+      "wav",
+      outputPath,
+    ],
+    {
+      encoding: "utf8",
+      maxBuffer: 1024 * 1024,
+    }
+  );
+
+  if (result.status !== 0 || !fs.existsSync(outputPath) || fs.statSync(outputPath).size < 44) {
+    fs.unlink(outputPath, () => undefined);
+    const detail = result.stderr || result.error?.message || "Unknown ffmpeg conversion failure.";
+    throw new Error(`Audio conversion failed: ${detail.slice(0, 240)}`);
+  }
+
+  console.log("[pronunciation/assessment] converted audio for deep scoring", {
+    ms: Date.now() - startedAt,
+    from: {
+      mimetype: audioFile.mimetype,
+      originalname: audioFile.originalname,
+    },
+    outputBytes: fs.statSync(outputPath).size,
+  });
+
+  return {
+    path: outputPath,
+    format: "wav",
+    cleanupPath: outputPath,
+  };
+}
+
+function prepareAudioForAssessment(audioFile) {
+  const directFormat = getAudioAssessmentFormat(audioFile);
+  if (directFormat) {
+    return {
+      path: audioFile.path,
+      format: directFormat,
+      cleanupPath: undefined,
+    };
+  }
+
+  if (!canConvertAudioForAssessment(audioFile)) {
+    return undefined;
+  }
+
+  return convertAudioForAssessment(audioFile);
 }
 
 function asStringArray(value, fallback, maxItems = 5, maxLength = 120) {
@@ -1811,23 +1918,38 @@ async function transcribeAudioFile(audioFile) {
 }
 
 async function createAudioPronunciationAssessment({ audioFile, expectedText, transcript, fallback, coachContext }) {
-  const inputFormat = getAudioAssessmentFormat(audioFile);
-  if (!openai || !inputFormat) {
+  if (!openai) {
+    return fallback;
+  }
+
+  let assessmentAudio;
+  try {
+    assessmentAudio = prepareAudioForAssessment(audioFile);
+  } catch (error) {
+    console.error("[pronunciation/assessment] audio conversion failed", {
+      error: error instanceof Error ? error.message : String(error),
+      audio: getAudioFileDebugInfo(audioFile),
+    });
     return {
       ...fallback,
-      summary: inputFormat
-        ? fallback.summary
-        : "Deep audio scoring needs a WAV or MP3 recording. Using transcript-only scoring for this attempt.",
+      summary: "Deep audio scoring could not convert this recording, so this attempt used transcript-only scoring.",
     };
   }
 
-  const base64Audio = fs.readFileSync(audioFile.path).toString("base64");
+  if (!assessmentAudio) {
+    return {
+      ...fallback,
+      summary: "Deep audio scoring needs a WAV/MP3 recording, or an M4A/AAC-style recording the server can convert. Using transcript-only scoring for this attempt.",
+    };
+  }
+
+  const base64Audio = fs.readFileSync(assessmentAudio.path).toString("base64");
   const transcriptScore = fallback.transcriptScore ?? fallback.score;
 
   try {
     const assessmentResult = await withTimeout(
       openai.chat.completions.create({
-        model: process.env.OPENAI_AUDIO_ASSESSMENT_MODEL || "gpt-4o-audio-preview",
+        model: process.env.OPENAI_AUDIO_ASSESSMENT_MODEL || "gpt-audio-1.5",
         modalities: ["text"],
         messages: [
           {
@@ -1854,7 +1976,7 @@ async function createAudioPronunciationAssessment({ audioFile, expectedText, tra
                 type: "input_audio",
                 input_audio: {
                   data: base64Audio,
-                  format: inputFormat,
+                  format: assessmentAudio.format,
                 },
               },
             ],
@@ -1881,10 +2003,19 @@ async function createAudioPronunciationAssessment({ audioFile, expectedText, tra
     };
   } catch (error) {
     openaiLastError = getSafeOpenAIError(error);
+    console.error("[pronunciation/assessment] deep audio scoring failed", {
+      error: openaiLastError,
+      audio: getAudioFileDebugInfo(audioFile),
+      format: assessmentAudio.format,
+    });
     return {
       ...fallback,
       summary: "Deep audio scoring was unavailable, so this attempt used transcript-only scoring.",
     };
+  } finally {
+    if (assessmentAudio.cleanupPath) {
+      fs.unlink(assessmentAudio.cleanupPath, () => undefined);
+    }
   }
 }
 

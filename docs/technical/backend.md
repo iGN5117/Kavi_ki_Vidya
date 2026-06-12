@@ -37,7 +37,7 @@ Use `.env.example` as the local contract:
 
 - `PORT`: local API port, default `8787`.
 - `OPENAI_API_KEY`: server-only OpenAI key. Never expose this in the mobile app.
-- `OPENAI_REALTIME_MODEL`, `OPENAI_REALTIME_VOICE`, `OPENAI_TRANSCRIBE_MODEL`, `OPENAI_TEXT_MODEL`, `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`: server-side model and voice overrides.
+- `OPENAI_REALTIME_MODEL`, `OPENAI_REALTIME_VOICE`, `OPENAI_TRANSCRIBE_MODEL`, `OPENAI_AUDIO_ASSESSMENT_MODEL`, `OPENAI_TEXT_MODEL`, `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`: server-side model and voice overrides. `OPENAI_AUDIO_ASSESSMENT_MODEL` defaults to `gpt-audio-1.5`.
 - `PROGRESS_STORAGE_PROVIDER`: `file-json` by default. Set to `supabase-rest` to use the Supabase adapter.
 - `SUPABASE_URL`: server-only Supabase project URL for `supabase-rest`.
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only Supabase service role key for `supabase-rest`. Never expose this in the mobile app.
@@ -53,6 +53,17 @@ Only `EXPO_PUBLIC_*` values are bundled into the Expo app. Supabase URL and publ
 The Expo mobile Supabase client helper lives in `src/services/supabase/client.ts`. It uses `@supabase/supabase-js` with `AsyncStorage` session persistence and `react-native-url-polyfill` for native URL support. The Next.js `@supabase/ssr` helpers are not used in the mobile app.
 
 Google OAuth and Apple Sign In are intentionally out of scope for the current production-ready path. The mobile app uses one local learner profile and persists that learner's data through Supabase-backed progress sync.
+
+## Voice Audio Assessment
+
+Transcription accepts the native recording formats produced by the mobile clients. Deep pronunciation scoring is stricter because the OpenAI audio assessment call accepts only WAV or MP3 audio input. The server therefore uses this flow:
+
+- WAV and MP3 uploads are sent to the audio assessment model directly.
+- Android M4A/MP4/AAC-style uploads are decoded server-side with `ffmpeg-static` into mono 16 kHz PCM WAV, then sent for deep scoring.
+- The conversion avoids an additional lossy encode; Android's original AAC/M4A capture is already compressed, and the server decodes it to WAV for model compatibility.
+- If conversion fails or the uploaded format is unsupported, the API keeps the session usable by falling back to transcript-only pronunciation scoring and returning that scoring mode to the app.
+
+This keeps the Android APK on a native mobile recording format while preserving deep scoring on the backend.
 
 ## Progress Sync Contract
 
