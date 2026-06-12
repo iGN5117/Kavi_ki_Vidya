@@ -125,13 +125,74 @@ Common fixes:
 4. Tap the mic and confirm Android requests microphone permission.
 5. Allow permission, record one clear sentence, then stop.
 6. Confirm the app reaches the local API through `10.0.2.2`.
-7. Confirm coach audio playback.
+7. Confirm the speaking response shows `Deep audio scoring` for a normal Android M4A recording. The server decodes Android M4A/AAC to WAV before the audio assessment call.
+8. Confirm coach audio playback.
 
 Common fixes:
 
 - If the API is unreachable, do not use `localhost` from the Android Emulator. Use `10.0.2.2`.
 - If recording is silent, check Emulator > Extended Controls > Microphone and host audio input settings.
 - If the permission prompt does not reappear, clear app data or uninstall the Expo/dev build from the emulator.
+
+## Automated Android Verification
+
+Use this before creating a new APK:
+
+```sh
+npm run android:test:start
+npm run verify:android
+npm run verify:android:ui
+npm run android:test:cleanup
+```
+
+For layout work, prefer the managed command:
+
+```sh
+npm run verify:android:ui:managed
+```
+
+For Android smoke testing with the same managed emulator/Metro lifecycle:
+
+```sh
+npm run verify:android:managed
+```
+
+The verifier expects:
+
+- Android SDK Platform-Tools (`adb`) available on `PATH` or under `~/Library/Android/sdk/platform-tools`.
+- Maestro installed and available on `PATH`.
+- A running Android Emulator or connected Android phone. `npm run android:test:start` starts `Kavi_Android_35` automatically when no emulator is running.
+- The native app installed with `npm run android`.
+- Metro running on `http://127.0.0.1:8081`. `npm run android:test:start` starts Metro with the Render API endpoint when it is not already running.
+
+Android test-session tools:
+
+- `npm run android:test:start`: starts the Android emulator when needed, starts Metro when needed, waits for both to be ready, and writes logs/PIDs under `.tmp/android-test-session`.
+- `npm run android:test:status`: prints tracked emulator/Metro status.
+- `npm run android:test:cleanup`: stops tracked Metro, kills Expo leftovers, and stops the emulator.
+- `npm run verify:android:managed`: starts the session, runs the Android smoke verifier, then cleans up in a `finally` block.
+- `npm run verify:android:ui:managed`: starts the session, runs the Android UI verifier, then cleans up in a `finally` block.
+
+The current flows are:
+
+- `.maestro/lesson-start.yaml`: completes onboarding, opens Learn, starts the recommended lesson, and verifies the first activity appears.
+- `.maestro/speak-mic.yaml`: completes onboarding, opens turn-based Free chat, grants microphone permission if needed, and verifies the mic enters recording state.
+
+The script clears `adb logcat` before running flows and fails if Android runtime or React Native errors appear after the flows. Treat `npm run verify:android` as the Android gate before EAS APK builds.
+
+Use `npm run verify:android:ui` when changing layout. It runs Android emulator flows for:
+
+- Speak home
+- Free conversation
+- Guided roleplay list
+- Guided roleplay conversation
+- Learn home
+- Lesson overview
+- Lesson activity
+- Review
+- Profile
+
+The UI verifier captures screenshots and Android UI hierarchy dumps in `/tmp/kavi-android-ui`. It fails if required screen nodes are missing, key elements sit outside the Android viewport, or the conversation back/end buttons overlap the first message area.
 
 ## Real Android Phone Checklist
 

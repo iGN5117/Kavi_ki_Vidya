@@ -62,7 +62,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <Screen>
+    <Screen testID="profile-screen">
       <View style={styles.header}>
         <Text style={styles.title}>{name}</Text>
         <Text style={styles.copy}>

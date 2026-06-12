@@ -5,11 +5,13 @@ import type { Scenario } from "@/src/types/content";
 type ScenarioCardProps = {
   scenario: Scenario;
   onPress: () => void;
+  testID?: string;
 };
 
-export function ScenarioCard({ scenario, onPress }: ScenarioCardProps) {
+export function ScenarioCard({ scenario, onPress, testID }: ScenarioCardProps) {
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={`${scenario.title} roleplay`}
       onPress={onPress}

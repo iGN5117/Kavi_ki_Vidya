@@ -39,7 +39,7 @@ export default function ReviewScreen() {
   const nextAction = getNextAction(goalStatus.isComplete, savedPhrases.length, Boolean(latestFeedback), priorityFocus);
 
   return (
-    <Screen>
+    <Screen testID="review-screen">
       <View style={styles.header}>
         <Text style={styles.title}>Review</Text>
         <Text style={styles.copy}>Practice useful phrases and gently revisit common mistakes from speaking sessions.</Text>

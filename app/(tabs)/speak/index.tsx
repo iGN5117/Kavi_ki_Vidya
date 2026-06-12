@@ -9,7 +9,7 @@ import { colors, radii, spacing } from "@/src/theme/theme";
 
 export default function SpeakHome() {
   return (
-    <Screen>
+    <Screen testID="speak-screen">
       <View style={styles.hero}>
         <CoachAvatar state="neutral" size={146} />
         <Text style={styles.eyebrow}>Speak anytime</Text>
@@ -18,17 +18,20 @@ export default function SpeakHome() {
       </View>
       <View style={styles.actions}>
         <PrimaryActionButton
+          testID="speak-live-conversation-button"
           label="Live conversation"
           onPress={() => router.push("/speak/live")}
           icon={<Radio color={colors.surface} size={20} />}
         />
         <PrimaryActionButton
+          testID="speak-guided-roleplay-button"
           label="Guided roleplay"
           variant="secondary"
           onPress={() => router.push("/speak/roleplay")}
           icon={<Theater color={colors.surface} size={20} />}
         />
         <PrimaryActionButton
+          testID="speak-free-chat-button"
           label="Free chat"
           variant="secondary"
           onPress={() => router.push("/speak/conversation?mode=free")}

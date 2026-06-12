@@ -7,19 +7,20 @@ import { colors, spacing } from "@/src/theme/theme";
 type ScreenProps = PropsWithChildren<{
   scroll?: boolean;
   edges?: Edge[];
+  testID?: string;
 }>;
 
-export function Screen({ children, scroll = true, edges = ["top", "right", "bottom", "left"] }: ScreenProps) {
+export function Screen({ children, scroll = true, edges = ["top", "right", "bottom", "left"], testID }: ScreenProps) {
   if (!scroll) {
     return (
-      <SafeAreaView edges={edges} style={styles.container}>
+      <SafeAreaView testID={testID} collapsable={false} edges={edges} style={styles.container}>
         <View style={styles.container}>{children}</View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView edges={edges} style={styles.container}>
+    <SafeAreaView testID={testID} collapsable={false} edges={edges} style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" style={styles.container}>
         {children}
       </ScrollView>

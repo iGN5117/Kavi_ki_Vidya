@@ -1,0 +1,37 @@
+appId: com.kavikividya.app
+---
+- launchApp:
+    clearState: true
+- openLink: kavi-ki-vidya://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081
+- extendedWaitUntil:
+    visible: "Continue"
+    timeout: 10000
+- tapOn: "Continue"
+- tapOn: "Continue"
+- tapOn: "Start speaking"
+- extendedWaitUntil:
+    visible:
+      id: "speak-screen"
+    timeout: 10000
+- tapOn:
+    id: "speak-free-chat-button"
+- extendedWaitUntil:
+    visible:
+      id: "speak-conversation-screen"
+    timeout: 10000
+- tapOn:
+    id: "speak-start-recording-button"
+- runFlow:
+    when:
+      visible: "While using the app"
+    commands:
+      - tapOn: "While using the app"
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+- extendedWaitUntil:
+    visible:
+      id: "speak-stop-recording-button"
+    timeout: 10000

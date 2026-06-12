@@ -85,11 +85,11 @@ export default function LearnHome() {
   const recommendationSkillTags = adaptiveRecommendation?.matchedSkillTags.slice(0, 3) ?? [];
 
   return (
-    <Screen>
+    <Screen testID="learn-screen">
       <View style={styles.header}>
         <View style={styles.headerTopRow}>
           <Text style={styles.eyebrow}>Learn</Text>
-          <StreakProgress streakCount={streakCount} />
+          <StreakProgress testID="learn-streak-progress" streakCount={streakCount} />
         </View>
         <Text style={styles.title}>A little English today</Text>
       </View>
@@ -132,6 +132,11 @@ export default function LearnHome() {
             <Text style={styles.cardCopy}>{recommendationCopy}</Text>
           </View>
         </View>
+        <PrimaryActionButton
+          testID="learn-start-lesson-button"
+          label={recommendationActionLabel}
+          onPress={() => router.push(`/learn/lesson/${recommendedLesson.id}`)}
+        />
         {adaptiveRecommendation ? (
           <View style={styles.whyCard}>
             <Text style={styles.whyLabel}>Why this lesson</Text>
@@ -159,7 +164,6 @@ export default function LearnHome() {
           }
           onPress={() => router.push(`/learn/lesson/${recommendedLesson.id}`)}
         />
-        <PrimaryActionButton label={recommendationActionLabel} onPress={() => router.push(`/learn/lesson/${recommendedLesson.id}`)} />
       </View>
 
       {reviewLessons.length ? (

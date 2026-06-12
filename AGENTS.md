@@ -1,13 +1,13 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-05-10 1:40am EDT
+# [English_Learning_App_Codex] recent context, 2026-06-12 6:16pm EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 38 obs (15,239t read) | 348,954t work | 96% savings
+Stats: 45 obs (17,505t read) | 520,153t work | 97% savings
 
 ### May 3, 2026
 2 11:11a 🔵 Turn-Based Chat Broken — Infinite Refresh Spinner
@@ -48,8 +48,16 @@ Stats: 38 obs (15,239t read) | 348,954t work | 96% savings
 37 " 🔵 Grammar Fix Unit Test: he/she/it Rule Not Covered in Inline Test, Potential False Positive
 38 " 🟣 Missing Copula Verb Fix Confirmed End-to-End in Text Turn and Feedback Session
 39 " 🟣 Voice Turn E2E Confirmed: Coach Narrates "I am good." Not "I good." on Grammar Retry
+### Jun 6, 2026
+186 11:57p 🟣 Android UI Automated Testing Infrastructure via Maestro
+187 " 🟣 EAS Android APK Build Triggered (Preview Profile)
+188 " 🔴 Session Review Screen Showed Hardcoded/Mismatched Data
+189 " ⚖️ Live Talk Feature Paused Until Physical Device Available
+190 " ⚖️ Supabase Selected as Production Backend; OAuth Removed
+191 " 🔴 Multiple Android-Specific UI Bugs Fixed
+192 " 🟣 LLM Cost Optimization: Combined Reply and Support Text into Single API Call
 
-Access 349k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 520k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify

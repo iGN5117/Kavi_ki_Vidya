@@ -49,7 +49,7 @@ export default function RoleplayScreen() {
   }
 
   return (
-    <Screen>
+    <Screen testID="roleplay-screen">
       <View style={styles.header}>
         <Text style={styles.eyebrow}>Guided roleplay</Text>
         <Text style={styles.title}>Practice real situations</Text>
@@ -69,7 +69,12 @@ export default function RoleplayScreen() {
               <Text style={styles.sectionCopy}>{section.copy}</Text>
             </View>
             {sectionScenarios.map((scenario) => (
-              <ScenarioCard key={scenario.id} scenario={scenario} onPress={() => openScenario(scenario)} />
+              <ScenarioCard
+                key={scenario.id}
+                testID={`roleplay-scenario-${scenario.id}`}
+                scenario={scenario}
+                onPress={() => openScenario(scenario)}
+              />
             ))}
           </View>
         );

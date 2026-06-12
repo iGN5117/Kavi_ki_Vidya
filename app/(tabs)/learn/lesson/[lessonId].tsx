@@ -31,6 +31,11 @@ const pronunciationRecordingOptions = {
   numberOfChannels: 1,
   sampleRate: 16000,
   bitRate: 256000,
+  android: {
+    extension: ".m4a",
+    outputFormat: "mpeg4",
+    audioEncoder: "aac",
+  },
   ios: {
     extension: ".wav",
     outputFormat: IOSOutputFormat.LINEARPCM,
@@ -357,7 +362,7 @@ export default function LessonScreen() {
 
   if (isDone) {
     return (
-      <Screen>
+      <Screen testID="lesson-complete-screen">
         <LessonProgressBar currentStep={lesson.activities.length} totalSteps={lesson.activities.length} progressPercent={100} />
         <View style={styles.success}>
           <Text style={styles.successIcon}>✓</Text>
@@ -384,7 +389,7 @@ export default function LessonScreen() {
   }
 
   return (
-    <Screen>
+    <Screen testID={isOverview ? "lesson-overview-screen" : "lesson-activity-screen"}>
       <LessonProgressBar
         currentStep={isOverview ? 0 : activityIndex + 1}
         totalSteps={lesson.activities.length}
@@ -402,7 +407,7 @@ export default function LessonScreen() {
               </Text>
             ))}
           </View>
-          <PrimaryActionButton label="Start lesson" onPress={next} />
+          <PrimaryActionButton testID="lesson-overview-start-button" label="Start lesson" onPress={next} />
           <PrimaryActionButton label="Skip lesson" variant="ghost" onPress={() => setSkipVisible(true)} />
         </View>
       ) : activity ? (

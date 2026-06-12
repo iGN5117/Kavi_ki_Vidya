@@ -55,6 +55,11 @@ const speakingRecordingOptions = {
   numberOfChannels: 1,
   sampleRate: 16000,
   bitRate: 256000,
+  android: {
+    extension: ".m4a",
+    outputFormat: "mpeg4",
+    audioEncoder: "aac",
+  },
   ios: {
     extension: ".wav",
     outputFormat: IOSOutputFormat.LINEARPCM,
@@ -552,31 +557,38 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
     setIsProcessing(false);
   }
 
+  const topControlsTop = Math.max(insets.top, spacing.sm);
+  const topControlsHeight = 44;
+  const topControlsClearance = topControlsTop + topControlsHeight + spacing.md;
+
   return (
-    <Screen scroll={false} edges={["right", "bottom", "left"]}>
+    <Screen testID="speak-conversation-screen" scroll={false} edges={["right", "bottom", "left"]}>
       <View style={styles.container}>
         <ScrollView
+          testID="conversation-message-list"
           ref={scrollRef}
           style={styles.messages}
           contentContainerStyle={[
             styles.messagesContent,
             {
-              paddingTop: Math.max(insets.top, spacing.md),
+              paddingTop: topControlsClearance,
               paddingBottom: Math.max(insets.bottom, spacing.lg) + 104,
             },
           ]}
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
         >
-          {turns.map((turn) => (
+          {turns.map((turn, index) => (
             <ConversationBubble
               key={turn.id}
+              testID={index === 0 ? "conversation-first-message" : undefined}
               turn={turn}
               onReplayAudio={replayCoachAudio}
             />
           ))}
         </ScrollView>
         <Pressable
+          testID="conversation-back-button"
           accessibilityRole="button"
           accessibilityLabel="Back to speaking options"
           onPress={exitConversation}
@@ -584,7 +596,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           style={[
             styles.topButton,
             {
-              top: Math.max(insets.top, spacing.sm),
+              top: topControlsTop,
               left: spacing.md,
             },
             isProcessing && styles.floatingButtonDisabled,
@@ -593,6 +605,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           <ArrowLeft color={colors.ink} size={20} />
         </Pressable>
         <Pressable
+          testID="conversation-end-button"
           accessibilityRole="button"
           accessibilityLabel="End speaking session"
           onPress={endSession}
@@ -600,7 +613,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           style={[
             styles.topButton,
             {
-              top: Math.max(insets.top, spacing.sm),
+              top: topControlsTop,
               right: spacing.md,
             },
             isProcessing && styles.floatingButtonDisabled,
@@ -609,6 +622,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           <Check color={colors.primary} size={18} />
         </Pressable>
         <Pressable
+          testID={recorderState.isRecording ? "speak-stop-recording-button" : "speak-start-recording-button"}
           accessibilityRole="button"
           accessibilityLabel={recorderState.isRecording ? "Stop recording" : isProcessing ? "Processing voice" : "Start recording"}
           onPress={recorderState.isRecording ? stopRecording : startRecording}

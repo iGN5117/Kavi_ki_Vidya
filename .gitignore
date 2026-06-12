@@ -58,6 +58,7 @@ yarn-error.*
 server/tmp/
 
 # local tool/workspace metadata
+.tmp/
 .codex/
 .graphify_python
 codex-vault/

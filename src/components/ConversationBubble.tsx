@@ -6,9 +6,10 @@ import type { ConversationTurn } from "@/src/types/speaking";
 type ConversationBubbleProps = {
   turn: ConversationTurn;
   onReplayAudio?: (audioUrl: string) => void;
+  testID?: string;
 };
 
-export function ConversationBubble({ turn, onReplayAudio }: ConversationBubbleProps) {
+export function ConversationBubble({ turn, onReplayAudio, testID }: ConversationBubbleProps) {
   const isUser = turn.speaker === "user";
   const replayAudioUrl = !isUser ? turn.audioUrl : undefined;
   const canReplay = Boolean(replayAudioUrl && onReplayAudio);
@@ -16,7 +17,7 @@ export function ConversationBubble({ turn, onReplayAudio }: ConversationBubblePr
   const primaryTip = turn.pronunciation?.tips?.[0];
 
   return (
-    <View style={styles.turnGroup}>
+    <View testID={testID} collapsable={false} style={styles.turnGroup}>
       <View style={[styles.bubble, isUser ? styles.user : styles.coach, canReplay && styles.coachWithReplay]}>
         {canReplay && replayAudioUrl ? (
           <Pressable

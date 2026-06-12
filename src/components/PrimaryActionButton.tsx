@@ -8,11 +8,13 @@ type PrimaryActionButtonProps = {
   variant?: "primary" | "secondary" | "ghost";
   icon?: ReactNode;
   disabled?: boolean;
+  testID?: string;
 };
 
-export function PrimaryActionButton({ label, onPress, variant = "primary", icon, disabled }: PrimaryActionButtonProps) {
+export function PrimaryActionButton({ label, onPress, variant = "primary", icon, disabled, testID }: PrimaryActionButtonProps) {
   return (
     <Pressable
+      testID={testID}
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: Boolean(disabled) }}
