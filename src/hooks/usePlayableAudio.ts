@@ -21,7 +21,7 @@ export function usePlayableAudio({ label }: PlayableAudioOptions) {
     async (audioUrl: string) => {
       await audioPlayer.seekTo(0).catch(() => undefined);
       audioPlayer.play();
-      console.info(`[kavi-audio] ${label} play-called ${audioUrl}`);
+      console.log(`[kavi-audio] ${label} play-called ${audioUrl}`);
     },
     [audioPlayer, label]
   );
@@ -35,7 +35,7 @@ export function usePlayableAudio({ label }: PlayableAudioOptions) {
         shouldRouteThroughEarpiece: false,
         interruptionMode: "doNotMix",
       });
-      console.info(`[kavi-audio] ${label} play-requested ${audioUrl}`);
+      console.log(`[kavi-audio] ${label} play-requested ${audioUrl}`);
       setPendingUrl(audioUrl);
 
       if (source === audioUrl && audioStatus.isLoaded) {
@@ -65,7 +65,7 @@ export function usePlayableAudio({ label }: PlayableAudioOptions) {
   useEffect(() => {
     if (!source || !audioStatus.playing || loggedPlayingUrlRef.current === source) return;
     loggedPlayingUrlRef.current = source;
-    console.info(`[kavi-audio] ${label} playing ${source}`);
+    console.log(`[kavi-audio] ${label} playing ${source}`);
   }, [audioStatus.playing, label, source]);
 
   return {

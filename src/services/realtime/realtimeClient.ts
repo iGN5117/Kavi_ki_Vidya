@@ -1,4 +1,5 @@
 import type { ConversationMode, ConversationTurn, PronunciationCheckResult, SpeakingFeedback } from "@/src/types/speaking";
+import { Platform } from "react-native";
 
 export type RealtimeSessionInfo = {
   clientSecret?: string;
@@ -57,7 +58,10 @@ type HealthResponse = {
 const endpoint = process.env.EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT;
 
 function getConfiguredEndpoint() {
-  return endpoint?.replace(/\/+$/, "");
+  const configuredEndpoint = endpoint?.replace(/\/+$/, "");
+  if (!configuredEndpoint || Platform.OS !== "android") return configuredEndpoint;
+
+  return configuredEndpoint.replace(/^(https?:\/\/)(localhost|127\.0\.0\.1)(?=[:/]|$)/i, "$110.0.2.2");
 }
 
 function getEndpoint(path: "voice" | "text" | "feedback" | "lessonAudio" | "pronunciation") {
@@ -345,13 +349,19 @@ export async function createLessonAudio(text: string) {
     throw new Error("Lesson audio needs the local AI endpoint.");
   }
 
-  const response = await fetch(audioEndpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text }),
-  });
+  let response: Response;
+  try {
+    response = await fetch(audioEndpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text }),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "network request failed";
+    throw new Error(`Lesson audio request failed at ${audioEndpoint}: ${message}`);
+  }
 
   if (!response.ok) {
     throw new Error(await getErrorMessage(response, `Lesson audio failed: ${response.status}`));

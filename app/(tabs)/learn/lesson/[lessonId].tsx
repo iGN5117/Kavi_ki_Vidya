@@ -163,8 +163,10 @@ export default function LessonScreen() {
           setPronunciationHelp("Model audio is unavailable, but you can still record your repeat.");
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!isMounted) return;
+        const message = error instanceof Error ? error.message : "Unknown audio error.";
+        console.warn(`[kavi-audio] learn-model load-failed ${message}`);
         setPronunciationStatus("model-ready");
         setPronunciationHelp("Model audio could not load. Record your repeat when ready.");
       });
@@ -709,6 +711,7 @@ export default function LessonScreen() {
                     result={pronunciationResult}
                     helpText={pronunciationHelp}
                     durationMillis={recorderState.durationMillis}
+                    isModelPlaying={modelAudioPlayback.audioStatus.playing}
                     onPlayModel={() => playSentenceAudio()}
                     onRecord={startPronunciationRecording}
                     onStop={stopPronunciationRecording}
@@ -725,6 +728,7 @@ export default function LessonScreen() {
                     result={pronunciationResult}
                     helpText={pronunciationHelp}
                     durationMillis={recorderState.durationMillis}
+                    isModelPlaying={modelAudioPlayback.audioStatus.playing}
                     onPlayModel={() => playSentenceAudio()}
                     onRecord={startPronunciationRecording}
                     onStop={stopPronunciationRecording}
@@ -788,6 +792,7 @@ function PronunciationPractice({
   result,
   helpText,
   durationMillis,
+  isModelPlaying,
   onPlayModel,
   onRecord,
   onStop,
@@ -798,6 +803,7 @@ function PronunciationPractice({
   result: PronunciationCheckResult | null;
   helpText: string | null;
   durationMillis: number;
+  isModelPlaying: boolean;
   onPlayModel: () => void;
   onRecord: () => void;
   onStop: () => void;
@@ -846,6 +852,11 @@ function PronunciationPractice({
           </Text>
         </Pressable>
       </View>
+      {isModelPlaying ? (
+        <Text testID="lesson-model-audio-playing" style={styles.pronunciationHelp}>
+          Playing model voice
+        </Text>
+      ) : null}
       {helpText ? <Text style={styles.pronunciationHelp}>{helpText}</Text> : null}
       {result ? (
         <View style={[styles.feedback, verdictTone]}>

@@ -5,7 +5,7 @@ appId: com.kavikividya.app
 - openLink: kavi-ki-vidya://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081
 - extendedWaitUntil:
     visible: "Continue"
-    timeout: 10000
+    timeout: 60000
 - tapOn: "Continue"
 - tapOn: "Continue"
 - tapOn: "Start speaking"
@@ -16,3 +16,7 @@ appId: com.kavikividya.app
     timeout: 30000
 - tapOn:
     id: "conversation-replay-audio-button"
+- extendedWaitUntil:
+    visible:
+      id: "speak-coach-audio-playing"
+    timeout: 10000

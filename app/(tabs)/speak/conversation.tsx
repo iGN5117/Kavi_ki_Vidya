@@ -10,7 +10,7 @@ import {
 import { router, useFocusEffect, useLocalSearchParams, useNavigation } from "expo-router";
 import { ArrowLeft, Check, Mic, Square } from "lucide-react-native";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConversationBubble } from "@/src/components/ConversationBubble";
 import { Screen } from "@/src/components/Screen";
@@ -683,6 +683,11 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
             <Mic color={colors.surface} size={30} />
           )}
         </Pressable>
+        {verifyAudioText && coachAudioPlayback.audioStatus.playing ? (
+          <Text testID="speak-coach-audio-playing" style={styles.audioVerificationMarker}>
+            Coach audio playing
+          </Text>
+        ) : null}
       </View>
     </Screen>
   );
@@ -802,5 +807,12 @@ const styles = StyleSheet.create({
   },
   floatingButtonDisabled: {
     opacity: 0.45,
+  },
+  audioVerificationMarker: {
+    position: "absolute",
+    left: spacing.md,
+    bottom: spacing.md,
+    color: colors.muted,
+    fontSize: 12,
   },
 });

@@ -9,6 +9,7 @@ const sessionDir = path.join(root, ".tmp", "android-test-session");
 const statePath = path.join(sessionDir, "state.json");
 const defaultAvdName = process.env.KAVI_ANDROID_AVD || "Kavi_Android_35";
 const metroUrl = "http://127.0.0.1:8081/status";
+const apiHealthUrl = "http://127.0.0.1:8787/health";
 const defaultApiBaseUrl = "https://kavi-ki-vidya-api.onrender.com/api";
 const defaultRealtimeEndpoint = "https://kavi-ki-vidya-api.onrender.com/api/realtime/session";
 
@@ -68,6 +69,7 @@ function buildToolEnv() {
     ...process.env,
     ANDROID_HOME: process.env.ANDROID_HOME || androidHome,
     ANDROID_SDK_ROOT: process.env.ANDROID_SDK_ROOT || androidHome,
+    EXPO_NO_DOTENV: "1",
     EXPO_PUBLIC_API_BASE_URL: process.env.EXPO_PUBLIC_API_BASE_URL || defaultApiBaseUrl,
     EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT: process.env.EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT || defaultRealtimeEndpoint,
     PATH: pathParts.join(path.delimiter),
@@ -149,14 +151,22 @@ function spawnDetached(label, command, args, logName, env) {
 }
 
 async function isMetroRunning() {
+  return isHttpEndpointReady(metroUrl, (body, statusCode) => statusCode === 200 && body.includes("packager-status:running"));
+}
+
+async function isApiRunning() {
+  return isHttpEndpointReady(apiHealthUrl, (body, statusCode) => statusCode === 200 && body.includes('"ok":true'));
+}
+
+async function isHttpEndpointReady(url, isReady) {
   return new Promise((resolve) => {
-    const request = http.get(metroUrl, (response) => {
+    const request = http.get(url, (response) => {
       let body = "";
       response.on("data", (chunk) => {
         body += chunk;
       });
       response.on("end", () => {
-        resolve(response.statusCode === 200 && body.includes("packager-status:running"));
+        resolve(isReady(body, response.statusCode));
       });
     });
 
@@ -169,13 +179,21 @@ async function isMetroRunning() {
 }
 
 async function waitForMetro(timeoutMs = 90000) {
+  await waitForEndpoint("Metro", isMetroRunning, metroUrl, timeoutMs);
+}
+
+async function waitForApi(timeoutMs = 90000) {
+  await waitForEndpoint("Local API", isApiRunning, apiHealthUrl, timeoutMs);
+}
+
+async function waitForEndpoint(label, isReady, url, timeoutMs) {
   const startedAt = Date.now();
   while (Date.now() - startedAt < timeoutMs) {
-    if (await isMetroRunning()) return;
+    if (await isReady()) return;
     await sleep(1000);
   }
 
-  throw new Error(`Metro did not become ready at ${metroUrl} within ${timeoutMs}ms.`);
+  throw new Error(`${label} did not become ready at ${url} within ${timeoutMs}ms.`);
 }
 
 async function waitForAndroidBoot(adb, env, timeoutMs = 120000) {
@@ -229,7 +247,7 @@ async function startSession(options = {}) {
     console.log("Metro is already running.");
     nextState.metroStartedByTool = false;
   } else {
-    const metroProcess = spawnDetached("Metro", "npm", ["run", "start", "--", "--host", "lan"], "metro.log", env);
+    const metroProcess = spawnDetached("Metro", "npm", ["run", "start", "--", "--host", "lan", "--clear"], "metro.log", env);
     nextState.metroPid = metroProcess.pid;
     nextState.metroLog = metroProcess.logPath;
     nextState.metroStartedByTool = true;
@@ -238,6 +256,20 @@ async function startSession(options = {}) {
 
   await waitForMetro();
   console.log("Metro is ready.");
+
+  if (await isApiRunning()) {
+    console.log("Local API is already running.");
+    nextState.apiStartedByTool = false;
+  } else {
+    const apiProcess = spawnDetached("Local API", "npm", ["run", "server"], "api.log", env);
+    nextState.apiPid = apiProcess.pid;
+    nextState.apiLog = apiProcess.logPath;
+    nextState.apiStartedByTool = true;
+    writeState(nextState);
+  }
+
+  await waitForApi();
+  console.log("Local API is ready.");
   writeState(nextState);
   return nextState;
 }
@@ -277,6 +309,10 @@ async function cleanupSession(options = {}) {
     await stopPid(state.metroPid, "Metro");
   }
 
+  if (state.apiStartedByTool || options.all) {
+    await stopPid(state.apiPid, "Local API");
+  }
+
   if (options.all) {
     spawnSync("pkill", ["-f", "expo"], { env, stdio: "ignore" });
   }
@@ -309,8 +345,11 @@ async function printStatus() {
         androidHome: env.ANDROID_HOME,
         devices,
         metroRunning: await isMetroRunning(),
+        apiRunning: await isApiRunning(),
         trackedMetroPid: state.metroPid,
         trackedMetroAlive: isPidAlive(state.metroPid),
+        trackedApiPid: state.apiPid,
+        trackedApiAlive: isPidAlive(state.apiPid),
         trackedEmulatorPid: state.emulatorPid,
         trackedEmulatorAlive: isPidAlive(state.emulatorPid),
         sessionDir,
