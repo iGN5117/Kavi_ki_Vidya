@@ -49,6 +49,7 @@ const progressRepository = createProgressRepository({
 
 fs.mkdirSync("server/tmp/audio", { recursive: true });
 
+app.set("trust proxy", true);
 app.use(cors());
 app.use(express.json({ limit: "128kb" }));
 app.use("/audio", express.static("server/tmp/audio"));
@@ -1485,6 +1486,18 @@ function getAudioFileDebugInfo(audioFile) {
   };
 }
 
+function getPublicRequestOrigin(request) {
+  const configuredOrigin = (process.env.PUBLIC_BASE_URL || process.env.RENDER_EXTERNAL_URL || "").replace(/\/+$/, "");
+  if (configuredOrigin) return configuredOrigin;
+
+  const forwardedProto = String(request.get("x-forwarded-proto") || "").split(",")[0].trim();
+  const forwardedHost = String(request.get("x-forwarded-host") || "").split(",")[0].trim();
+  const protocol = forwardedProto || request.protocol || "http";
+  const host = forwardedHost || request.get("host");
+
+  return `${protocol}://${host}`;
+}
+
 function getSafeAudioFilename(audioFile) {
   const originalName = typeof audioFile?.originalname === "string" ? audioFile.originalname : "";
   const cleaned = originalName.replace(/[^a-zA-Z0-9._-]/g, "").slice(0, 80);
@@ -1889,7 +1902,7 @@ async function createCoachAudioUrl({ request, reply }) {
     const audioName = `coach-${Date.now()}.mp3`;
     fs.writeFileSync(`server/tmp/audio/${audioName}`, speechBuffer);
     openaiLastError = null;
-    return `${request.protocol}://${request.get("host")}/audio/${audioName}`;
+    return `${getPublicRequestOrigin(request)}/audio/${audioName}`;
   } catch (error) {
     openaiLastError = getSafeOpenAIError(error);
     return undefined;

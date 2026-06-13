@@ -21,6 +21,7 @@ export function ConversationBubble({ turn, onReplayAudio, testID }: Conversation
       <View style={[styles.bubble, isUser ? styles.user : styles.coach, canReplay && styles.coachWithReplay]}>
         {canReplay && replayAudioUrl ? (
           <Pressable
+            testID="conversation-replay-audio-button"
             accessibilityRole="button"
             accessibilityLabel="Replay coach audio"
             onPress={() => onReplayAudio?.(replayAudioUrl)}

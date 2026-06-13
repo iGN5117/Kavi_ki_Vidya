@@ -4,7 +4,6 @@ import {
   RecordingPresets,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
-  useAudioPlayer,
   useAudioRecorder,
   useAudioRecorderState,
 } from "expo-audio";
@@ -18,6 +17,7 @@ import { Screen } from "@/src/components/Screen";
 import { SkipConfirmationSheet } from "@/src/components/SkipConfirmationSheet";
 import { lessons, getLesson } from "@/src/content/lessons";
 import { modules } from "@/src/content/modules";
+import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
 import { checkLessonPronunciation, createLessonAudio } from "@/src/services/realtime/realtimeClient";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
@@ -57,7 +57,7 @@ export default function LessonScreen() {
   const lesson = useMemo(() => getLesson(lessonId) ?? getLesson("greetings-intro")!, [lessonId]);
   const recorder = useAudioRecorder(pronunciationRecordingOptions);
   const recorderState = useAudioRecorderState(recorder);
-  const audioPlayer = useAudioPlayer();
+  const modelAudioPlayback = usePlayableAudio({ label: "learn-model" });
   const [activityIndex, setActivityIndex] = useState(-1);
   const [meaningVisible, setMeaningVisible] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -264,12 +264,7 @@ export default function LessonScreen() {
   async function playSentenceAudio(audioUrl = modelAudioUrl) {
     if (!audioUrl) return;
 
-    await setAudioModeAsync({
-      allowsRecording: false,
-      playsInSilentMode: true,
-    });
-    audioPlayer.replace(audioUrl);
-    audioPlayer.play();
+    await modelAudioPlayback.playUrl(audioUrl);
   }
 
   async function startPronunciationRecording() {
@@ -817,6 +812,7 @@ function PronunciationPractice({
     <View style={styles.pronunciationPanel}>
       <View style={styles.pronunciationActions}>
         <Pressable
+          testID="lesson-play-model-button"
           accessibilityRole="button"
           accessibilityLabel="Play model voice"
           onPress={onPlayModel}

@@ -30,6 +30,8 @@
     "android:test:cleanup": "node scripts/android-test-session.js cleanup --all",
     "verify:android": "node scripts/verify-android.js",
     "verify:android:ui": "node scripts/verify-android-ui.js",
+    "verify:audio": "node scripts/verify-audio-playback.js",
+    "verify:android:audio": "node scripts/run-android-verification-session.js verify-audio-playback.js --android",
     "verify:android:managed": "node scripts/run-android-verification-session.js verify-android.js",
     "verify:android:ui:managed": "node scripts/run-android-verification-session.js verify-android-ui.js",
     "verify:mvp": "npm run typecheck && npm run verify:content && npm run verify:adaptive && npm run verify:persistence && npm run verify:production"

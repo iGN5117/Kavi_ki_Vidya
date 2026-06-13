@@ -2,8 +2,6 @@ import {
   AudioQuality,
   IOSOutputFormat,
   RecordingPresets,
-  useAudioPlayer,
-  useAudioPlayerStatus,
   requestRecordingPermissionsAsync,
   setAudioModeAsync,
   useAudioRecorder,
@@ -17,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConversationBubble } from "@/src/components/ConversationBubble";
 import { Screen } from "@/src/components/Screen";
 import { scenarios } from "@/src/content/scenarios";
+import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
 import { getTabBarStyle } from "@/src/navigation/tabBarStyle";
 import { buildLocalFeedback, personalizeFeedbackWithTurnPronunciation } from "@/src/services/feedback/sampleFeedback";
 import { attachPracticeSessionReceipt } from "@/src/services/feedback/sessionReceipt";
@@ -24,6 +23,7 @@ import { buildRealtimeInstructions } from "@/src/services/realtime/sessionConfig
 import {
   checkPracticeConnection,
   checkLessonPronunciation,
+  createLessonAudio,
   createRealtimeSession,
   generateSessionFeedback,
   getInitialPracticeConnectionStatus,
@@ -209,10 +209,12 @@ export default function ConversationScreen() {
     practiceSource?: string;
     practicePrompt?: string;
     practiceDetail?: string;
+    verifyAudioText?: string;
   }>();
   const mode: ConversationMode = params.mode === "roleplay" ? "roleplay" : "free";
   const scenario = scenarios.find((item) => item.id === params.scenarioId);
   const practiceDrill = useMemo(() => getPracticeDrill(params), [params.practiceDetail, params.practiceItemId, params.practicePrompt, params.practiceSource]);
+  const verifyAudioText = typeof params.verifyAudioText === "string" ? params.verifyAudioText.trim() : "";
   const addSpeakingFeedback = useAppStore((state) => state.addSpeakingFeedback);
   const addDrillResult = useAppStore((state) => state.addDrillResult);
   const savedPhrases = useAppStore((state) => state.savedPhrases);
@@ -220,18 +222,12 @@ export default function ConversationScreen() {
   const feedbackHistory = useAppStore((state) => state.feedbackHistory);
   const recorder = useAudioRecorder(speakingRecordingOptions);
   const recorderState = useAudioRecorderState(recorder);
-  const [coachAudioSource, setCoachAudioSource] = useState<string | null>(null);
-  const [pendingCoachAudioUrl, setPendingCoachAudioUrl] = useState<string | null>(null);
-  const audioPlayer = useAudioPlayer(coachAudioSource, {
-    downloadFirst: true,
-    keepAudioSessionActive: true,
-    updateInterval: 100,
-  });
-  const audioStatus = useAudioPlayerStatus(audioPlayer);
+  const coachAudioPlayback = usePlayableAudio({ label: "speak-coach" });
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const scrollRef = useRef<ScrollView>(null);
   const [coachState, setCoachState] = useState<CoachState>("neutral");
+  const verifyAudioStartedRef = useRef(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [micHelpText, setMicHelpText] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState(getInitialPracticeConnectionStatus);
@@ -300,18 +296,6 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
   }, [turns]);
 
   useEffect(() => {
-    if (!pendingCoachAudioUrl || coachAudioSource !== pendingCoachAudioUrl || !audioStatus.isLoaded) return;
-
-    audioPlayer
-      .seekTo(0)
-      .catch(() => undefined)
-      .finally(() => {
-        audioPlayer.play();
-        setPendingCoachAudioUrl(null);
-      });
-  }, [audioPlayer, audioStatus.isLoaded, coachAudioSource, pendingCoachAudioUrl]);
-
-  useEffect(() => {
     let isMounted = true;
 
     checkPracticeConnection().then((status) => {
@@ -324,6 +308,40 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
       isMounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!verifyAudioText || verifyAudioStartedRef.current) return;
+
+    verifyAudioStartedRef.current = true;
+    let isMounted = true;
+
+    createLessonAudio(verifyAudioText)
+      .then(async (result) => {
+        if (!isMounted || !result.audioUrl) return;
+        const coachTurn: ConversationTurn = {
+          id: createTurnId("coach-verify"),
+          speaker: "coach",
+          text: verifyAudioText,
+          supportText: "Audio verification sample.",
+          audioUrl: result.audioUrl,
+        };
+        setTurns((current) => {
+          const nextTurns = [...current, coachTurn];
+          turnsRef.current = nextTurns;
+          return nextTurns;
+        });
+        scrollConversationToEnd();
+        await playCoachAudio(result.audioUrl, "Verifying coach audio playback.");
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "verification audio failed";
+        console.warn(`[kavi-audio] speak-coach verify-failed ${message}`);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [verifyAudioText]);
 
   function createTurnId(prefix: string) {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -339,24 +357,9 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
   }
 
   async function playCoachAudio(audioUrl: string, note: string) {
-    await setAudioModeAsync({
-      allowsRecording: false,
-      playsInSilentMode: true,
-      shouldRouteThroughEarpiece: false,
-      interruptionMode: "doNotMix",
-    });
     setCoachState("speaking");
     setConnectionNote(note);
-    setPendingCoachAudioUrl(audioUrl);
-
-    if (coachAudioSource === audioUrl && audioStatus.isLoaded) {
-      await audioPlayer.seekTo(0).catch(() => undefined);
-      audioPlayer.play();
-      setPendingCoachAudioUrl(null);
-      return;
-    }
-
-    setCoachAudioSource(audioUrl);
+    await coachAudioPlayback.playUrl(audioUrl);
   }
 
   async function appendCoachResult(result: VoiceTurnResult, userTurnLabel?: string) {
