@@ -1,3 +1,5 @@
+import type { LocalizedSupport } from "@/src/types/content";
+
 export type ConversationMode = "roleplay" | "free";
 
 export type CoachState = "neutral" | "listening" | "speaking" | "encouraging" | "thinking";
@@ -26,6 +28,7 @@ export type ConversationTurn = {
   speaker: "user" | "coach";
   text: string;
   supportText?: string;
+  support?: LocalizedSupport;
   label?: string;
   audioUrl?: string;
   pronunciation?: PronunciationCheckResult;

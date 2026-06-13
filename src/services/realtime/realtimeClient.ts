@@ -1,3 +1,4 @@
+import type { LocalizedSupport } from "@/src/types/content";
 import type { ConversationMode, ConversationTurn, PronunciationCheckResult, SpeakingFeedback } from "@/src/types/speaking";
 import { Platform } from "react-native";
 
@@ -11,6 +12,7 @@ export type CoachTurnResult = {
   transcript: string;
   reply: string;
   supportText?: string;
+  support?: LocalizedSupport;
   audioUrl?: string;
   isDemo?: boolean;
   pronunciation?: PronunciationCheckResult;

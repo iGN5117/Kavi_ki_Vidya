@@ -18,10 +18,11 @@ import { SkipConfirmationSheet } from "@/src/components/SkipConfirmationSheet";
 import { lessons, getLesson } from "@/src/content/lessons";
 import { modules } from "@/src/content/modules";
 import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
+import { getLocalizedSupportLines, getPronunciationHelpSupport, getPronunciationSupport } from "@/src/services/i18n/languageSupport";
 import { checkLessonPronunciation, createLessonAudio } from "@/src/services/realtime/realtimeClient";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
-import type { LessonActivity } from "@/src/types/content";
+import type { ExplanationPreference, LessonActivity, LocalizedSupport } from "@/src/types/content";
 import type { PronunciationCheckResult } from "@/src/types/speaking";
 
 const orderedLessonIds = modules.flatMap((module) => module.lessonIds);
@@ -449,6 +450,7 @@ export default function LessonScreen() {
                         ? "This is the sentence you can safely use while speaking."
                         : `The best answer is: ${activity.answer}`}
                     </Text>
+                    <InlineSupport support={activity.explanation} preference={explanationPreference} />
                   </View>
                   <MeaningPanel
                     visible={meaningVisible}
@@ -502,6 +504,7 @@ export default function LessonScreen() {
                     <Text style={styles.feedbackCopy}>
                       {selectedMeaningIsCorrect ? activity.answer : `Best meaning: ${activity.answer}`}
                     </Text>
+                    <InlineSupport support={activity.explanation} preference={explanationPreference} />
                   </View>
                   <MeaningPanel
                     visible={meaningVisible}
@@ -560,6 +563,7 @@ export default function LessonScreen() {
                         ? `${activity.sentenceStart}${activity.answer}${activity.sentenceEnd}`
                         : `Best answer: ${activity.answer}`}
                     </Text>
+                    <InlineSupport support={activity.explanation} preference={explanationPreference} />
                   </View>
                   <MeaningPanel
                     visible={meaningVisible}
@@ -629,6 +633,7 @@ export default function LessonScreen() {
                         ? arrangedWords.join(" ")
                         : `Best order: ${activity.answer.join(" ")}`}
                     </Text>
+                    <InlineSupport support={activity.explanation} preference={explanationPreference} />
                   </View>
                   <MeaningPanel
                     visible={meaningVisible}
@@ -680,6 +685,7 @@ export default function LessonScreen() {
                     <Text style={styles.feedbackCopy}>
                       {selectedFixSentenceIsCorrect ? activity.answer : `Best sentence: ${activity.answer}`}
                     </Text>
+                    <InlineSupport support={activity.explanation} preference={explanationPreference} />
                   </View>
                   <MeaningPanel
                     visible={meaningVisible}
@@ -710,6 +716,7 @@ export default function LessonScreen() {
                     status={pronunciationStatus}
                     result={pronunciationResult}
                     helpText={pronunciationHelp}
+                    preference={explanationPreference}
                     durationMillis={recorderState.durationMillis}
                     isModelPlaying={modelAudioPlayback.audioStatus.playing}
                     onPlayModel={() => playSentenceAudio()}
@@ -727,6 +734,7 @@ export default function LessonScreen() {
                     status={pronunciationStatus}
                     result={pronunciationResult}
                     helpText={pronunciationHelp}
+                    preference={explanationPreference}
                     durationMillis={recorderState.durationMillis}
                     isModelPlaying={modelAudioPlayback.audioStatus.playing}
                     onPlayModel={() => playSentenceAudio()}
@@ -791,6 +799,7 @@ function PronunciationPractice({
   status,
   result,
   helpText,
+  preference,
   durationMillis,
   isModelPlaying,
   onPlayModel,
@@ -802,6 +811,7 @@ function PronunciationPractice({
   status: PronunciationStatus;
   result: PronunciationCheckResult | null;
   helpText: string | null;
+  preference: ExplanationPreference;
   durationMillis: number;
   isModelPlaying: boolean;
   onPlayModel: () => void;
@@ -813,6 +823,11 @@ function PronunciationPractice({
   const isChecking = status === "checking";
   const isLoadingModel = status === "loading-model";
   const verdictTone = result?.verdict === "clear" ? styles.correctFeedback : styles.tryAgainFeedback;
+  const helpSupport = getPronunciationHelpSupport(helpText);
+  const helpSupportLines = getLocalizedSupportLines(helpSupport, preference);
+  const pronunciationSupportLines = result
+    ? getLocalizedSupportLines(getPronunciationSupport(result), preference)
+    : [];
 
   return (
     <View style={styles.pronunciationPanel}>
@@ -858,6 +873,11 @@ function PronunciationPractice({
         </Text>
       ) : null}
       {helpText ? <Text style={styles.pronunciationHelp}>{helpText}</Text> : null}
+      {helpSupportLines.map((line) => (
+        <Text key={line} style={styles.pronunciationHelpSupport}>
+          {line}
+        </Text>
+      ))}
       {result ? (
         <View style={[styles.feedback, verdictTone]}>
           <View style={styles.verdictHeader}>
@@ -865,6 +885,11 @@ function PronunciationPractice({
             <Text style={styles.scorePill}>{Math.round(result.score)}%</Text>
           </View>
           <Text style={styles.feedbackCopy}>{result.summary}</Text>
+          {pronunciationSupportLines.map((line) => (
+            <Text key={line} style={styles.feedbackSupportText}>
+              {line}
+            </Text>
+          ))}
           <Text style={styles.scoringModeText}>
             {result.scoringMode === "audio" ? "Deep audio scoring" : "Transcript-only fallback"}
           </Text>
@@ -903,6 +928,21 @@ function PronunciationPractice({
           ) : null}
         </View>
       ) : null}
+    </View>
+  );
+}
+
+function InlineSupport({ support, preference }: { support: LocalizedSupport; preference: ExplanationPreference }) {
+  const lines = getLocalizedSupportLines(support, preference);
+  if (!lines.length) return null;
+
+  return (
+    <View style={styles.inlineSupport}>
+      {lines.map((line) => (
+        <Text key={line} style={styles.feedbackSupportText}>
+          {line}
+        </Text>
+      ))}
     </View>
   );
 }
@@ -1125,6 +1165,11 @@ const styles = StyleSheet.create({
     color: colors.muted,
     lineHeight: 20,
     fontWeight: "700",
+  },
+  pronunciationHelpSupport: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 19,
   },
   verdictHeader: {
     flexDirection: "row",
@@ -1372,6 +1417,15 @@ const styles = StyleSheet.create({
   },
   feedbackCopy: {
     color: colors.muted,
+    lineHeight: 20,
+  },
+  inlineSupport: {
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  feedbackSupportText: {
+    color: colors.muted,
+    fontSize: 14,
     lineHeight: 20,
   },
   success: {

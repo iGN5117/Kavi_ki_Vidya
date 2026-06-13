@@ -1,20 +1,27 @@
 import { Volume2 } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { getLocalizedSupportLines, getPronunciationSupport } from "@/src/services/i18n/languageSupport";
 import { colors, radii, spacing } from "@/src/theme/theme";
+import type { ExplanationPreference } from "@/src/types/content";
 import type { ConversationTurn } from "@/src/types/speaking";
 
 type ConversationBubbleProps = {
   turn: ConversationTurn;
+  preference: ExplanationPreference;
   onReplayAudio?: (audioUrl: string) => void;
   testID?: string;
 };
 
-export function ConversationBubble({ turn, onReplayAudio, testID }: ConversationBubbleProps) {
+export function ConversationBubble({ turn, preference, onReplayAudio, testID }: ConversationBubbleProps) {
   const isUser = turn.speaker === "user";
   const replayAudioUrl = !isUser ? turn.audioUrl : undefined;
   const canReplay = Boolean(replayAudioUrl && onReplayAudio);
   const modelSentence = turn.pronunciation ? getModelSentence(turn.pronunciation) : undefined;
   const primaryTip = turn.pronunciation?.tips?.[0];
+  const supportLines = getLocalizedSupportLines(turn.support, preference, turn.supportText);
+  const pronunciationSupportLines = turn.pronunciation
+    ? getLocalizedSupportLines(getPronunciationSupport(turn.pronunciation), preference)
+    : [];
 
   return (
     <View testID={testID} collapsable={false} style={styles.turnGroup}>
@@ -32,7 +39,11 @@ export function ConversationBubble({ turn, onReplayAudio, testID }: Conversation
         ) : null}
         {turn.label ? <Text style={[styles.label, isUser ? styles.userLabel : styles.coachLabel]}>{turn.label}</Text> : null}
         <Text style={[styles.text, isUser ? styles.userText : styles.coachText]}>{turn.text}</Text>
-        {turn.supportText ? <Text style={styles.supportText}>{turn.supportText}</Text> : null}
+        {supportLines.map((line) => (
+          <Text key={line} style={styles.supportText}>
+            {line}
+          </Text>
+        ))}
       </View>
       {isUser && turn.pronunciation ? (
         <View style={styles.assessmentCard}>
@@ -55,6 +66,11 @@ export function ConversationBubble({ turn, onReplayAudio, testID }: Conversation
             </View>
           ) : null}
           <Text style={styles.pronunciationCopy}>{turn.pronunciation.summary}</Text>
+          {pronunciationSupportLines.map((line) => (
+            <Text key={line} style={styles.pronunciationSupportText}>
+              {line}
+            </Text>
+          ))}
           {primaryTip ? <Text style={styles.pronunciationTip}>{primaryTip}</Text> : null}
         </View>
       ) : null}
@@ -207,6 +223,11 @@ const styles = StyleSheet.create({
     fontWeight: "900",
   },
   pronunciationCopy: {
+    color: colors.muted,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  pronunciationSupportText: {
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18,

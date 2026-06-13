@@ -135,6 +135,14 @@ function assertNoHiddenSupportContinuation(reply, supportText, label) {
   );
 }
 
+function assertBilingualSupport(payload, label) {
+  const hiDeva = String(payload?.support?.["hi-Deva"] || "");
+  const hiLatn = String(payload?.support?.["hi-Latn"] || "");
+
+  assert(/\p{Script=Devanagari}/u.test(hiDeva), `${label} should return Hindi-script support. Got: ${stringify(payload?.support)}`);
+  assert(isMostlyLatin(hiLatn), `${label} should return Roman Hindi/Hinglish support. Got: ${stringify(payload?.support)}`);
+}
+
 function assertNarratesModelSentence(reply, expectedSentence, label) {
   assert(
     includesText(reply, expectedSentence),
@@ -282,6 +290,7 @@ async function verifyTextTurnSupportText() {
 
   assert(typeof result.reply === "string" && result.reply.trim().length > 0, `Text turn should return reply. Got: ${stringify(result)}`);
   assert(typeof result.supportText === "string" && result.supportText.trim().length > 0, `Text turn should return supportText. Got: ${stringify(result)}`);
+  assertBilingualSupport(result, "Text turn");
   assertNoHiddenSupportContinuation(result.reply, result.supportText, "Text turn");
   assertDoesNotCreateSelfGreetingDrill(result.reply, "Text turn");
   console.log("OK text turn keeps supportText scoped to the visible reply");
@@ -298,6 +307,7 @@ async function verifyShortTextTurnHandling() {
   assert(emptyTurn.transcript === "", `Empty text turn should preserve an empty transcript. Got: ${stringify(emptyTurn)}`);
   assert(typeof emptyTurn.reply === "string" && emptyTurn.reply.trim().length > 0, `Empty text turn should return a graceful reply. Got: ${stringify(emptyTurn)}`);
   assert(typeof emptyTurn.supportText === "string" && emptyTurn.supportText.trim().length > 0, `Empty text turn should return supportText. Got: ${stringify(emptyTurn)}`);
+  assertBilingualSupport(emptyTurn, "Empty text turn");
   assertNoHiddenSupportContinuation(emptyTurn.reply, emptyTurn.supportText, "Empty text turn");
   console.log("OK short/empty text turn is handled gracefully");
 }

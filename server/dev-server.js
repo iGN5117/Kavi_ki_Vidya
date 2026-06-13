@@ -200,7 +200,7 @@ app.put("/api/progress/:profileId", async (request, response) => {
 const coachReplyJsonSchema = {
   type: "object",
   additionalProperties: false,
-  required: ["reply", "supportText"],
+  required: ["reply", "supportText", "support"],
   properties: {
     reply: {
       type: "string",
@@ -210,7 +210,22 @@ const coachReplyJsonSchema = {
     supportText: {
       type: "string",
       description:
-        "Short Hindi/Hinglish meaning of the English reply only. Do not add any question, prompt, or conversation continuation that is not already in reply.",
+        "Short Roman Hindi/Hinglish meaning of the English reply only. Do not add any question, prompt, or conversation continuation that is not already in reply.",
+    },
+    support: {
+      type: "object",
+      additionalProperties: false,
+      required: ["hi-Deva", "hi-Latn"],
+      properties: {
+        "hi-Deva": {
+          type: "string",
+          description: "Short Devanagari Hindi meaning of the English reply only.",
+        },
+        "hi-Latn": {
+          type: "string",
+          description: "Short Roman Hindi/Hinglish meaning of the English reply only.",
+        },
+      },
     },
   },
 };
@@ -922,8 +937,23 @@ function createRealtimeInputFormatUpdate(inputRate) {
 function withStructuredCoachInstructions(instructions) {
   return `${withTeachingStructureInstructions(instructions)}
 
-Return only JSON with keys "reply" and "supportText". Do not include markdown.
-supportText must be the Hindi/Hinglish meaning of reply only. It must not contain any extra question, instruction, or conversation continuation that is missing from reply.`;
+Return only JSON with keys "reply", "supportText", and "support". Do not include markdown.
+supportText must be the Roman Hindi/Hinglish meaning of reply only.
+support["hi-Deva"] must be the same support meaning in Devanagari Hindi.
+support["hi-Latn"] must be the same support meaning in Roman Hindi/Hinglish.
+Support must not contain any extra question, instruction, or conversation continuation that is missing from reply.`;
+}
+
+function createCoachPayload({ reply, hiDeva, hiLatn, isDemo = true }) {
+  return {
+    reply,
+    supportText: hiLatn,
+    support: {
+      "hi-Deva": hiDeva,
+      "hi-Latn": hiLatn,
+    },
+    isDemo,
+  };
 }
 
 function localCoachReply(input, turns = [], pronunciation) {
@@ -932,67 +962,67 @@ function localCoachReply(input, turns = [], pronunciation) {
 
   if (needsPronunciationRetry(pronunciation)) {
     const modelSentence = getPronunciationModelSentence(pronunciation.expectedText, input);
-    return {
+    return createCoachPayload({
       reply: `Listen once: "${modelSentence}" Now you try the full sentence slowly.`,
-      supportText: `Pehle pura sentence suno, phir dheere se repeat karo: "${modelSentence}"`,
-      isDemo: true,
-    };
+      hiDeva: `पहले पूरा वाक्य सुनिए, फिर धीरे से बोलिए: "${modelSentence}"`,
+      hiLatn: `Pehle pura sentence suniye, phir dheere se boliye: "${modelSentence}"`,
+    });
   }
 
   if (normalized.includes("how are you")) {
-    return {
+    return createCoachPayload({
       reply: "I am fine, thank you. How are you feeling today?",
-      supportText: "Main theek hoon, dhanyavaad. Aap aaj kaisa feel kar rahi hain?",
-      isDemo: true,
-    };
+      hiDeva: "मैं ठीक हूँ, धन्यवाद। आप आज कैसा महसूस कर रही हैं?",
+      hiLatn: "Main theek hoon, dhanyavaad. Aap aaj kaisa feel kar rahi hain?",
+    });
   }
 
   if (/\b(hello|hi|namaste)\b/.test(normalized)) {
-    return {
+    return createCoachPayload({
       reply: "Hello. It is nice to talk to you. How was your day?",
-      supportText: "Hello. Aapse baat karke accha laga. Aapka din kaisa tha?",
-      isDemo: true,
-    };
+      hiDeva: "Hello. आपसे बात करके अच्छा लगा। आपका दिन कैसा था?",
+      hiLatn: "Hello. Aapse baat karke accha laga. Aapka din kaisa tha?",
+    });
   }
 
   if (pronunciation?.verdict === "clear" || pronunciation?.score >= 85) {
     const cleanInput = clampText(input, "That was clear.", 140);
-    return {
+    return createCoachPayload({
       reply: `Very clear. You said: "${cleanInput}" What else would you like to say?`,
-      supportText: "Bahut clear tha. Ab ek aur kaam ke baare mein batayein.",
-      isDemo: true,
-    };
+      hiDeva: "बहुत clear था। अब एक और बात बताइए।",
+      hiLatn: "Bahut clear tha. Ab ek aur baat batayein.",
+    });
   }
 
   if (normalized.includes("teacher")) {
-    return {
+    return createCoachPayload({
       reply: 'I understand. Say: "I want to talk to the teacher." Can you repeat it slowly?',
-      supportText: 'Aap keh sakti hain: "I want to talk to the teacher."',
-      isDemo: true,
-    };
+      hiDeva: 'आप कह सकती हैं: "I want to talk to the teacher."',
+      hiLatn: 'Aap keh sakti hain: "I want to talk to the teacher."',
+    });
   }
 
   if (normalized.includes("price") || normalized.includes("much")) {
-    return {
+    return createCoachPayload({
       reply: 'Nice question. Say: "How much is this?" Ask me once.',
-      supportText: 'Aap bol sakti hain: "How much is this?"',
-      isDemo: true,
-    };
+      hiDeva: 'आप बोल सकती हैं: "How much is this?"',
+      hiLatn: 'Aap bol sakti hain: "How much is this?"',
+    });
   }
 
   if (normalized.includes("name")) {
-    return {
+    return createCoachPayload({
       reply: 'Good start. Say: "My name is Kavita." Now say it with your own name.',
-      supportText: 'Simple English: "My name is Kavita." Apna naam daal dijiye.',
-      isDemo: true,
-    };
+      hiDeva: 'Simple English: "My name is Kavita." इसमें अपना नाम डालिए।',
+      hiLatn: 'Simple English: "My name is Kavita." Ismein apna naam daaliye.',
+    });
   }
 
-  return {
+  return createCoachPayload({
     reply: 'I understand your meaning. Say: "I need help, please." Repeat it once slowly.',
-    supportText: 'Aapka meaning clear tha. Simple English: "I need help, please."',
-    isDemo: true,
-  };
+    hiDeva: 'आपका मतलब clear था। Simple English: "I need help, please."',
+    hiLatn: 'Aapka meaning clear tha. Simple English: "I need help, please."',
+  });
 }
 
 function formatPronunciationContext(pronunciation) {
@@ -1117,13 +1147,63 @@ function sanitizeSupportText(reply, supportText, fallback = "") {
   return cleanedSupport;
 }
 
+function sanitizeOptionalSupportText(reply, supportText, fallback = "") {
+  const cleanedReply = clampText(reply, "", 420);
+  const cleanedSupport = clampText(supportText, "", 260);
+  if (!cleanedSupport && !fallback) return "";
+
+  if (!fallback) {
+    const replyHasContinuation = hasConversationContinuation(cleanedReply);
+    const supportHasContinuation = hasConversationContinuation(cleanedSupport);
+
+    if (!replyHasContinuation && supportHasContinuation) {
+      return getFirstSupportSentence(cleanedSupport);
+    }
+
+    if (cleanedSupport.length > Math.max(120, cleanedReply.length * 2)) {
+      return getFirstSupportSentence(cleanedSupport);
+    }
+
+    return cleanedSupport;
+  }
+
+  const resolved = sanitizeSupportText(cleanedReply, cleanedSupport, fallback);
+  return resolved;
+}
+
+function getSupportValue(value, key) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value[key] : undefined;
+}
+
+function sanitizeLocalizedSupport(reply, parsedSupport, fallbackSupport = {}, fallbackSupportText = "") {
+  const hiDeva = sanitizeOptionalSupportText(
+    reply,
+    getSupportValue(parsedSupport, "hi-Deva") || getSupportValue(parsedSupport, "hindi") || getSupportValue(parsedSupport, "hindiSupport"),
+    fallbackSupport["hi-Deva"] || "",
+  );
+  const hiLatn = sanitizeOptionalSupportText(
+    reply,
+    getSupportValue(parsedSupport, "hi-Latn") ||
+      getSupportValue(parsedSupport, "hinglish") ||
+      getSupportValue(parsedSupport, "hinglishSupport") ||
+      (typeof parsedSupport === "string" ? parsedSupport : ""),
+    fallbackSupport["hi-Latn"] || fallbackSupportText,
+  );
+  return {
+    ...(hiDeva ? { "hi-Deva": hiDeva } : {}),
+    ...(hiLatn ? { "hi-Latn": hiLatn } : {}),
+  };
+}
+
 function getCoachReplyFromAssessment(assessment) {
   const reply = ensureRetryReplyNarratesSentence(assessment?.coachReply, assessment);
   if (!reply) return undefined;
+  const supportText = sanitizeSupportText(reply, assessment?.coachSupportText, "");
 
   return {
     reply,
-    supportText: sanitizeSupportText(reply, assessment?.coachSupportText, ""),
+    supportText,
+    support: sanitizeLocalizedSupport(reply, undefined, {}, supportText),
     isDemo: false,
   };
 }
@@ -1451,22 +1531,36 @@ function sanitizeCoachReply(rawOutput, fallback) {
   const parsed = extractJsonObject(rawOutput);
 
   if (!parsed) {
+    const reply = clampText(rawOutput, fallback.reply, 420);
+    const support = sanitizeLocalizedSupport(reply, fallback.support, fallback.support, fallback.supportText);
     return {
-      reply: clampText(rawOutput, fallback.reply, 420),
+      reply,
       supportText: fallback.supportText,
+      support,
       isDemo: Boolean(fallback.isDemo),
     };
   }
 
   const reply = clampText(parsed.reply || parsed.coachReply || parsed.message, fallback.reply, 420);
+  const support = sanitizeLocalizedSupport(
+    reply,
+    parsed.support,
+    fallback.support,
+    fallback.supportText
+  );
+  const supportText = sanitizeSupportText(
+    reply,
+    parsed.supportText || parsed.hinglishSupport || support["hi-Latn"],
+    fallback.supportText
+  );
 
   return {
     reply,
-    supportText: sanitizeSupportText(
-      reply,
-      parsed.supportText || parsed.hinglishSupport || parsed.support,
-      fallback.supportText
-    ),
+    support: {
+      ...support,
+      ...(supportText ? { "hi-Latn": supportText } : {}),
+    },
+    supportText,
     isDemo: Boolean(fallback.isDemo),
   };
 }
@@ -1787,13 +1881,18 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
   const rhythmScore = audioAssessment.rhythmScore;
   const componentScores = [clarityScore, soundAccuracyScore, rhythmScore].filter((score) => typeof score === "number");
   const lowestComponent = componentScores.length ? Math.min(...componentScores) : undefined;
+  const nearClearCap = Math.max(config.practiceThreshold, config.clearThreshold - 5);
 
   const capReasons = [];
   if (hasExpectedTarget && transcriptScore < 85) capReasons.push({ cap: 84, reason: "target words were not reliably heard" });
   if (hasExpectedTarget && transcriptScore < 70) capReasons.push({ cap: 69, reason: "too many target words were missed" });
-  if (audioScore < config.clearThreshold) capReasons.push({ cap: 84, reason: "audio score was below clear threshold" });
-  if (typeof clarityScore === "number" && clarityScore < config.minClarityForClear) capReasons.push({ cap: 84, reason: "clarity needs one more pass" });
-  if (typeof soundAccuracyScore === "number" && soundAccuracyScore < config.minSoundForClear) capReasons.push({ cap: 84, reason: "key sounds need one more pass" });
+  if (audioScore < config.clearThreshold) capReasons.push({ cap: nearClearCap, reason: "audio score was below clear threshold" });
+  if (typeof clarityScore === "number" && clarityScore < config.minClarityForClear) {
+    capReasons.push({ cap: nearClearCap, reason: "clarity needs one more pass" });
+  }
+  if (typeof soundAccuracyScore === "number" && soundAccuracyScore < config.minSoundForClear) {
+    capReasons.push({ cap: nearClearCap, reason: "key sounds need one more pass" });
+  }
   if (typeof rhythmScore === "number" && rhythmScore < config.minRhythmForClear) capReasons.push({ cap: 86, reason: "rhythm needs one more pass" });
   if (typeof lowestComponent === "number" && lowestComponent < 65) capReasons.push({ cap: 69, reason: "one pronunciation component was weak" });
 
@@ -2358,6 +2457,7 @@ app.post("/api/voice/turn", upload.single("audio"), async (request, response) =>
         transcript,
         reply: coach.reply,
         supportText: coach.supportText,
+        support: coach.support,
         pronunciation,
         isDemo: true,
       });
@@ -2428,6 +2528,7 @@ app.post("/api/voice/turn", upload.single("audio"), async (request, response) =>
       transcript,
       reply: coach.reply,
       supportText: coach.supportText,
+      support: coach.support,
       audioUrl,
       pronunciation: {
         ...pronunciationForClient,
@@ -2460,6 +2561,7 @@ app.post("/api/text/turn", async (request, response) => {
       transcript: learnerText,
       reply: coach.reply,
       supportText: coach.supportText,
+      support: coach.support,
       audioUrl,
       isDemo: Boolean(coach.isDemo),
     });

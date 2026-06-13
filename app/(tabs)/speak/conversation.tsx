@@ -32,12 +32,14 @@ import {
 import type { DrillResultOutcome } from "@/src/services/sync/progressSync";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
+import type { LocalizedSupport } from "@/src/types/content";
 import type { ConversationMode, ConversationTurn, CoachState, PronunciationCheckResult, SpeakingFeedback } from "@/src/types/speaking";
 
 type VoiceTurnResult = {
   transcript: string;
   reply: string;
   supportText?: string;
+  support?: LocalizedSupport;
   audioUrl?: string;
   isDemo?: boolean;
   pronunciation?: PronunciationCheckResult;
@@ -115,6 +117,10 @@ function getStarterTurn(scenario?: (typeof scenarios)[number], practiceDrill?: P
       speaker: "coach",
       text: `Let's practice this: "${practiceDrill.prompt}" Say it once slowly, then say it naturally.`,
       supportText: practiceDrill.detail ?? "Pehle dheere boliye, phir natural speed mein boliye.",
+      support: {
+        "hi-Deva": "पहले धीरे बोलिए, फिर natural speed में बोलिए।",
+        "hi-Latn": practiceDrill.detail ?? "Pehle dheere boliye, phir natural speed mein boliye.",
+      },
     };
   }
 
@@ -123,6 +129,10 @@ function getStarterTurn(scenario?: (typeof scenarios)[number], practiceDrill?: P
     speaker: "coach",
     text: scenario?.starter ?? "Namaste. Tell me anything you want to say in English.",
     supportText: "Hindi, English, or mixed language is okay.",
+    support: {
+      "hi-Deva": "Hindi, English, या mixed language ठीक है।",
+      "hi-Latn": "Hindi, English, ya mixed language theek hai.",
+    },
   };
 }
 
@@ -220,6 +230,7 @@ export default function ConversationScreen() {
   const savedPhrases = useAppStore((state) => state.savedPhrases);
   const mistakes = useAppStore((state) => state.mistakes);
   const feedbackHistory = useAppStore((state) => state.feedbackHistory);
+  const explanationPreference = useAppStore((state) => state.explanationPreference);
   const recorder = useAudioRecorder(speakingRecordingOptions);
   const recorderState = useAudioRecorderState(recorder);
   const coachAudioPlayback = usePlayableAudio({ label: "speak-coach" });
@@ -378,6 +389,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           speaker: "coach",
           text: result.reply,
           supportText: result.supportText,
+          support: result.support,
           audioUrl: result.audioUrl,
         },
       ];
@@ -621,6 +633,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
               key={turn.id}
               testID={index === 0 ? "conversation-first-message" : undefined}
               turn={turn}
+              preference={explanationPreference}
               onReplayAudio={replayCoachAudio}
             />
           ))}
