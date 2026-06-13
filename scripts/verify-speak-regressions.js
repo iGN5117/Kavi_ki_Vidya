@@ -323,7 +323,9 @@ async function createSentenceAudio(sentence) {
 async function postVoiceTurn({ audioBuffer, filename, expectedText, turns }) {
   const form = new FormData();
   form.append("audio", new Blob([audioBuffer], { type: "audio/mpeg" }), filename);
-  form.append("expectedText", expectedText);
+  if (expectedText?.trim()) {
+    form.append("expectedText", expectedText.trim());
+  }
   form.append(
     "turns",
     JSON.stringify(turns || [{ speaker: "coach", text: "Namaste. Tell me anything you want to say in English." }])
@@ -347,11 +349,14 @@ async function verifyVoiceTurnRegression() {
   const clearTurn = await postVoiceTurn({
     audioBuffer: clearAudio,
     filename: "nice-to-meet-you.mp3",
-    expectedText: "Nice to meet you.",
   });
 
   assertIHeardTranscriptIsEnglishScript(clearTurn.transcript, "Voice clear turn");
   assert(clearTurn.pronunciation?.score >= 85, `Clear generated speech should score at least 85. Got: ${stringify(clearTurn.pronunciation)}`);
+  assert(
+    clearTurn.pronunciation?.strictness?.targetSource === "transcript-target",
+    `Free-chat voice turn should use transcript-derived pronunciation target. Got: ${stringify(clearTurn.pronunciation)}`
+  );
   assertDoesNotRepeatHighScoredSentence(clearTurn.reply, "Nice to meet you.", "Voice clear turn");
   assertNoHiddenSupportContinuation(clearTurn.reply, clearTurn.supportText, "Voice clear turn");
 

@@ -37,7 +37,9 @@ Use `.env.example` as the local contract:
 
 - `PORT`: local API port, default `8787`.
 - `OPENAI_API_KEY`: server-only OpenAI key. Never expose this in the mobile app.
-- `OPENAI_REALTIME_MODEL`, `OPENAI_REALTIME_VOICE`, `OPENAI_TRANSCRIBE_MODEL`, `OPENAI_AUDIO_ASSESSMENT_MODEL`, `OPENAI_TEXT_MODEL`, `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`: server-side model and voice overrides. `OPENAI_AUDIO_ASSESSMENT_MODEL` defaults to `gpt-audio-1.5`.
+- `OPENAI_REALTIME_MODEL`, `OPENAI_REALTIME_VOICE`, `OPENAI_TRANSCRIBE_MODEL`, `OPENAI_AUDIO_ASSESSMENT_MODEL`, `OPENAI_TEXT_MODEL`, `OPENAI_TTS_MODEL`, `OPENAI_TTS_VOICE`, `OPENAI_TTS_INSTRUCTIONS`: server-side model and voice overrides. Turn-based coach audio defaults to `nova` with a warm Indian English woman coach instruction. `OPENAI_AUDIO_ASSESSMENT_MODEL` defaults to `gpt-audio-1.5`.
+- `PRONUNCIATION_TRANSCRIPT_WEIGHT`, `PRONUNCIATION_CLEAR_THRESHOLD`, `PRONUNCIATION_PRACTICE_THRESHOLD`, `PRONUNCIATION_MIN_CLARITY_FOR_CLEAR`, `PRONUNCIATION_MIN_SOUND_FOR_CLEAR`, `PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR`: strict pronunciation scoring controls. Known-target lesson/repeat drills use strict audio-first scoring so a clean transcript cannot hide unclear pronunciation.
+- Speak free-chat uses the ASR transcript as a transcript-derived pronunciation target. The transcript identifies the likely intended sentence, but scoring still comes from audio clarity, sound accuracy, and rhythm; the transcript alone cannot make the attempt clear.
 - `PROGRESS_STORAGE_PROVIDER`: `file-json` by default. Set to `supabase-rest` to use the Supabase adapter.
 - `SUPABASE_URL`: server-only Supabase project URL for `supabase-rest`.
 - `SUPABASE_SERVICE_ROLE_KEY`: server-only Supabase service role key for `supabase-rest`. Never expose this in the mobile app.

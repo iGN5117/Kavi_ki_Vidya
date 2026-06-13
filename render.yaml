@@ -21,7 +21,21 @@ services:
       - key: OPENAI_TTS_MODEL
         value: gpt-4o-mini-tts
       - key: OPENAI_TTS_VOICE
-        value: alloy
+        value: nova
+      - key: OPENAI_TTS_INSTRUCTIONS
+        value: Speak as a warm Indian English woman coach for adult learners. Use a calm, clear, natural Indian English accent, medium-slow pace, and gentle encouragement. Do not exaggerate the accent.
+      - key: PRONUNCIATION_TRANSCRIPT_WEIGHT
+        value: "0.08"
+      - key: PRONUNCIATION_CLEAR_THRESHOLD
+        value: "90"
+      - key: PRONUNCIATION_PRACTICE_THRESHOLD
+        value: "70"
+      - key: PRONUNCIATION_MIN_CLARITY_FOR_CLEAR
+        value: "86"
+      - key: PRONUNCIATION_MIN_SOUND_FOR_CLEAR
+        value: "86"
+      - key: PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR
+        value: "78"
       - key: OPENAI_TRANSCRIBE_LANGUAGE
         value: en
       - key: PROGRESS_STORAGE_PROVIDER

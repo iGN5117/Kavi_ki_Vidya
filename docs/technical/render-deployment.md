@@ -46,6 +46,46 @@ npx eas-cli@latest env:create preview --name EXPO_PUBLIC_REALTIME_SESSION_ENDPOI
 npx eas-cli@latest build --platform android --profile preview --non-interactive
 ```
 
+## Self-Serve Deploy Tooling
+
+The repo includes a deploy helper for the Render backend:
+
+```bash
+npm run deploy:backend
+npm run deploy:backend:push
+npm run deploy:backend:wait
+npm run deploy:backend:health
+```
+
+Configure one of these deployment paths in your local `.env`:
+
+```bash
+# Simple trigger: copy this from Render service Settings > Deploy Hook.
+RENDER_DEPLOY_HOOK_URL=https://api.render.com/deploy/srv-...
+
+# Optional exact deploy polling through Render's REST API.
+RENDER_API_KEY=...
+RENDER_SERVICE_ID=srv-...
+```
+
+`npm run deploy:backend` triggers a Render deploy and then polls the public service health endpoint. If `RENDER_API_KEY` and `RENDER_SERVICE_ID` are present, it uses Render's deploy API and polls the deploy status directly. If only `RENDER_DEPLOY_HOOK_URL` is present, it triggers the deploy hook and polls `/health`.
+
+If the Render service has GitHub auto-deploy enabled, use:
+
+```bash
+npm run deploy:backend:push
+```
+
+That command refuses to run with uncommitted changes, pushes the current branch to `origin`, then waits for `/health` to report the pushed commit.
+
+The helper defaults to:
+
+```bash
+RENDER_SERVICE_URL=https://kavi-ki-vidya-api.onrender.com
+```
+
+Deploy hook URLs and Render API keys are secrets. Keep them in `.env` or your shell environment only.
+
 ## Verification
 
 After deploy, open:
