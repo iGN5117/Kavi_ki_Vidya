@@ -17,7 +17,8 @@ export function ConversationBubble({ turn, preference, onReplayAudio, testID }: 
   const replayAudioUrl = !isUser ? turn.audioUrl : undefined;
   const canReplay = Boolean(replayAudioUrl && onReplayAudio);
   const modelSentence = turn.pronunciation ? getModelSentence(turn.pronunciation) : undefined;
-  const primaryTip = turn.pronunciation?.tips?.[0];
+  const pronunciationTips = turn.pronunciation?.tips?.filter(Boolean).slice(0, 3) ?? [];
+  const focusItems = getFocusItems(turn.pronunciation);
   const supportLines = getLocalizedSupportLines(turn.support, preference, turn.supportText);
   const pronunciationSupportLines = turn.pronunciation
     ? getLocalizedSupportLines(getPronunciationSupport(turn.pronunciation), preference)
@@ -71,7 +72,12 @@ export function ConversationBubble({ turn, preference, onReplayAudio, testID }: 
               {line}
             </Text>
           ))}
-          {primaryTip ? <Text style={styles.pronunciationTip}>{primaryTip}</Text> : null}
+          {focusItems.length ? <Text style={styles.pronunciationFocus}>Focus: {focusItems.join(", ")}</Text> : null}
+          {pronunciationTips.map((tip) => (
+            <Text key={tip} style={styles.pronunciationTip}>
+              {tip}
+            </Text>
+          ))}
         </View>
       ) : null}
     </View>
@@ -104,6 +110,13 @@ function getModelSentence(pronunciation: NonNullable<ConversationTurn["pronuncia
   }
 
   return modelSentence;
+}
+
+function getFocusItems(pronunciation: ConversationTurn["pronunciation"]) {
+  if (!pronunciation || pronunciation.verdict === "clear") return [];
+  const sounds = pronunciation.problemSounds?.map((item) => item.trim()).filter(Boolean) ?? [];
+  const retryWords = pronunciation.retryWords?.map((item) => item.trim()).filter(Boolean) ?? [];
+  return (sounds.length ? sounds : retryWords).slice(0, 3);
 }
 
 const styles = StyleSheet.create({
@@ -231,6 +244,12 @@ const styles = StyleSheet.create({
     color: colors.muted,
     fontSize: 13,
     lineHeight: 18,
+  },
+  pronunciationFocus: {
+    color: colors.primary,
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: "900",
   },
   pronunciationTip: {
     color: colors.ink,

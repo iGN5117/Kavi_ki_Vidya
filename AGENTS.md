@@ -1,13 +1,13 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-06-13 4:13pm EDT
+# [English_Learning_App_Codex] recent context, 2026-06-16 9:09am EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 45 obs (17,505t read) | 520,153t work | 97% savings
+Stats: 50 obs (19,388t read) | 670,558t work | 97% savings
 
 ### May 3, 2026
 2 11:11a 🔵 Turn-Based Chat Broken — Infinite Refresh Spinner
@@ -56,8 +56,14 @@ Stats: 45 obs (17,505t read) | 520,153t work | 97% savings
 190 " ⚖️ Supabase Selected as Production Backend; OAuth Removed
 191 " 🔴 Multiple Android-Specific UI Bugs Fixed
 192 " 🟣 LLM Cost Optimization: Combined Reply and Support Text into Single API Call
+### Jun 16, 2026
+338 9:09a 🟣 50+ Expanded Lessons Added via expandedCurriculum.ts
+339 " 🟣 Differentiated Pronunciation Scoring Thresholds for Known vs Free-Chat Targets
+340 " 🟣 ConversationBubble Shows Pronunciation Focus Items and Tips
+341 " 🟣 Voice Turn Regression Tests Extended with knownTarget Flag Assertions
+342 " 🔵 Dev Server Only Reachable from Within verify Script Process, Not from Shell curl/node
 
-Access 520k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 671k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify

@@ -1,4 +1,5 @@
 import type { LessonSkillTag } from "@/src/types/content";
+import { expandedLessonSkillProfiles } from "@/src/content/expandedCurriculum";
 
 export const lessonSkillProfiles: Record<string, LessonSkillTag[]> = {
   "greetings-intro": [
@@ -32,6 +33,7 @@ export const lessonSkillProfiles: Record<string, LessonSkillTag[]> = {
   "handle-misunderstanding-follow-up": ["clarification", "follow-up-question", "modal-should", "polite-request"],
   "summarize-service-problem": ["summary", "already", "present-perfect", "service-request", "problem-reporting"],
   "community-decision-discussion": ["decision-discussion", "summary", "purpose-connector", "formal-follow-up", "polite-disagreement"],
+  ...expandedLessonSkillProfiles,
 };
 
 export function getLessonSkillTags(lessonId: string): LessonSkillTag[] {

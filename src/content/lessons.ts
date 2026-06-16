@@ -1,4 +1,5 @@
 import type { Lesson } from "@/src/types/content";
+import { expandedLessons } from "@/src/content/expandedCurriculum";
 
 export const lessons: Lesson[] = [
   {
@@ -2284,6 +2285,7 @@ export const lessons: Lesson[] = [
       },
     ],
   },
+  ...expandedLessons,
 ];
 
 export function getLesson(lessonId: string) {

@@ -367,6 +367,10 @@ async function verifyVoiceTurnRegression() {
     clearTurn.pronunciation?.strictness?.targetSource === "transcript-target",
     `Free-chat voice turn should use transcript-derived pronunciation target. Got: ${stringify(clearTurn.pronunciation)}`
   );
+  assert(
+    clearTurn.pronunciation?.strictness?.knownTarget === false,
+    `Free-chat voice turn should not use known-target repeat thresholds. Got: ${stringify(clearTurn.pronunciation)}`
+  );
   assertDoesNotRepeatHighScoredSentence(clearTurn.reply, "Nice to meet you.", "Voice clear turn");
   assertNoHiddenSupportContinuation(clearTurn.reply, clearTurn.supportText, "Voice clear turn");
 
@@ -379,6 +383,14 @@ async function verifyVoiceTurnRegression() {
   assert(
     mismatchTurn.pronunciation?.score < 85 || mismatchTurn.pronunciation?.verdict !== "clear",
     `Mismatched expected text should not be marked clear. Got: ${stringify(mismatchTurn.pronunciation)}`
+  );
+  assert(
+    mismatchTurn.pronunciation?.strictness?.knownTarget === true,
+    `Expected-text voice turn should use known-target thresholds. Got: ${stringify(mismatchTurn.pronunciation)}`
+  );
+  assert(
+    Array.isArray(mismatchTurn.pronunciation?.tips) && mismatchTurn.pronunciation.tips.length > 0,
+    `Retry pronunciation payload should include concrete tips. Got: ${stringify(mismatchTurn.pronunciation)}`
   );
   assert(
     includesText(mismatchTurn.reply, "I want to talk to the teacher"),

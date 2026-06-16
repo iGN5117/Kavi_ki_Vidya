@@ -1860,19 +1860,21 @@ function localPronunciationCheck(expectedText, transcript) {
   };
 }
 
-function getPronunciationScoringConfig(hasExpectedTarget) {
+function getPronunciationScoringConfig({ hasExpectedTarget, targetSource }) {
+  const hasKnownTarget = hasExpectedTarget && targetSource !== "transcript-target";
   return {
-    transcriptWeight: getEnvNumber("PRONUNCIATION_TRANSCRIPT_WEIGHT", hasExpectedTarget ? 0.08 : 0.14, 0, 0.4),
-    clearThreshold: getEnvNumber("PRONUNCIATION_CLEAR_THRESHOLD", hasExpectedTarget ? 90 : 85, 80, 98),
-    practiceThreshold: getEnvNumber("PRONUNCIATION_PRACTICE_THRESHOLD", hasExpectedTarget ? 70 : 62, 50, 90),
-    minClarityForClear: getEnvNumber("PRONUNCIATION_MIN_CLARITY_FOR_CLEAR", hasExpectedTarget ? 86 : 82, 70, 98),
-    minSoundForClear: getEnvNumber("PRONUNCIATION_MIN_SOUND_FOR_CLEAR", hasExpectedTarget ? 86 : 80, 70, 98),
-    minRhythmForClear: getEnvNumber("PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR", hasExpectedTarget ? 78 : 72, 60, 98),
+    transcriptWeight: getEnvNumber("PRONUNCIATION_TRANSCRIPT_WEIGHT", hasKnownTarget ? 0.08 : 0.04, 0, 0.4),
+    clearThreshold: getEnvNumber("PRONUNCIATION_CLEAR_THRESHOLD", hasKnownTarget ? 90 : 86, 80, 98),
+    practiceThreshold: getEnvNumber("PRONUNCIATION_PRACTICE_THRESHOLD", hasKnownTarget ? 70 : 62, 50, 90),
+    minClarityForClear: getEnvNumber("PRONUNCIATION_MIN_CLARITY_FOR_CLEAR", hasKnownTarget ? 86 : 78, 70, 98),
+    minSoundForClear: getEnvNumber("PRONUNCIATION_MIN_SOUND_FOR_CLEAR", hasKnownTarget ? 86 : 76, 70, 98),
+    minRhythmForClear: getEnvNumber("PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR", hasKnownTarget ? 78 : 70, 60, 98),
   };
 }
 
 function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasExpectedTarget, targetSource = "provided-target" }) {
-  const config = getPronunciationScoringConfig(hasExpectedTarget);
+  const config = getPronunciationScoringConfig({ hasExpectedTarget, targetSource });
+  const hasKnownTarget = hasExpectedTarget && targetSource !== "transcript-target";
   const audioScore = audioAssessment.audioScore ?? audioAssessment.score;
   const transcriptWeight = config.transcriptWeight;
   let finalScore = Math.round(audioScore * (1 - transcriptWeight) + transcriptScore * transcriptWeight);
@@ -1884,8 +1886,8 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
   const nearClearCap = Math.max(config.practiceThreshold, config.clearThreshold - 5);
 
   const capReasons = [];
-  if (hasExpectedTarget && transcriptScore < 85) capReasons.push({ cap: 84, reason: "target words were not reliably heard" });
-  if (hasExpectedTarget && transcriptScore < 70) capReasons.push({ cap: 69, reason: "too many target words were missed" });
+  if (hasKnownTarget && transcriptScore < 85) capReasons.push({ cap: 84, reason: "target words were not reliably heard" });
+  if (hasKnownTarget && transcriptScore < 70) capReasons.push({ cap: 69, reason: "too many target words were missed" });
   if (audioScore < config.clearThreshold) capReasons.push({ cap: nearClearCap, reason: "audio score was below clear threshold" });
   if (typeof clarityScore === "number" && clarityScore < config.minClarityForClear) {
     capReasons.push({ cap: nearClearCap, reason: "clarity needs one more pass" });
@@ -1903,7 +1905,7 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
   const canBeClear =
     finalScore >= config.clearThreshold &&
     audioScore >= config.clearThreshold &&
-    (!hasExpectedTarget || transcriptScore >= 85) &&
+    (!hasKnownTarget || transcriptScore >= 85) &&
     (typeof clarityScore !== "number" || clarityScore >= config.minClarityForClear) &&
     (typeof soundAccuracyScore !== "number" || soundAccuracyScore >= config.minSoundForClear) &&
     (typeof rhythmScore !== "number" || rhythmScore >= config.minRhythmForClear);
@@ -1917,9 +1919,55 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
       transcriptWeight,
       clearThreshold: config.clearThreshold,
       practiceThreshold: config.practiceThreshold,
+      knownTarget: hasKnownTarget,
       capsApplied: capReasons.map((item) => item.reason),
     },
   };
+}
+
+function getDiagnosticPronunciationTips({ assessment, strictOutcome }) {
+  const tips = [];
+  const problemSounds = Array.isArray(assessment.problemSounds)
+    ? assessment.problemSounds.map((item) => clampText(item, "", 60)).filter(Boolean)
+    : [];
+  const retryWords = Array.isArray(assessment.retryWords)
+    ? assessment.retryWords.map((item) => clampText(item, "", 40)).filter(Boolean)
+    : [];
+
+  if (strictOutcome.verdict !== "clear") {
+    if (problemSounds.length) {
+      tips.push(`Focus on: ${problemSounds.slice(0, 3).join(", ")}.`);
+    } else if (retryWords.length) {
+      tips.push(`Say these words clearly: ${retryWords.slice(0, 3).join(", ")}.`);
+    }
+
+    if (strictOutcome.strictness.capsApplied.includes("clarity needs one more pass")) {
+      tips.push("Speak each word fully, with a small pause between key words.");
+    }
+
+    if (strictOutcome.strictness.capsApplied.includes("key sounds need one more pass")) {
+      tips.push("Listen to the model sentence once, then copy the full word endings.");
+    }
+
+    if (strictOutcome.strictness.capsApplied.includes("rhythm needs one more pass")) {
+      tips.push("Use a steady rhythm instead of rushing the middle of the sentence.");
+    }
+  }
+
+  for (const tip of assessment.tips || []) {
+    const cleanedTip = clampText(tip, "", 120);
+    if (cleanedTip) tips.push(cleanedTip);
+  }
+
+  const seen = new Set();
+  return tips
+    .filter((tip) => {
+      const normalized = simplifyFeedbackSentence(tip);
+      if (!normalized || seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    })
+    .slice(0, 3);
 }
 
 function getAssessmentModeText({ targetSource, hasExpectedTarget }) {
@@ -2174,6 +2222,8 @@ async function createAudioPronunciationAssessment({
                   "Do not penalize normal Indian English accent patterns, but do penalize swallowed endings, missing syllables, substituted words, unclear vowel/consonant sounds, or rhythm that makes the sentence hard to follow. " +
                   "Use score 90-100 only when every word is clear, key sounds are accurate, and the rhythm is easy to follow. Use 70-89 when understandable but noticeably unclear. Use below 70 when key words, syllables, or sounds are unclear. " +
                   'verdict must be "clear", "practice-again", or "try-again". Tips must be short next-attempt actions. ' +
+                  "When verdict is not clear, summary must name the main spoken issue in plain words, such as a missed word, unclear ending, rushed rhythm, low volume, or unclear vowel/consonant. " +
+                  "When verdict is not clear, problemSounds must contain concrete focus items from the audio, such as whole words, syllables, or short sound notes. Do not return vague items like 'pronunciation' or 'clarity'. " +
                   "coachReply should be the next thing the coach says. If verdict is clear, do not ask for the same sentence again; answer greetings/questions directly and continue with a tiny related question. " +
                   'If verdict is practice-again or try-again, coachReply must first narrate the full correct model sentence after Listen:, for example: Listen: "I want to talk to the teacher." Then give one specific tip and ask for one repeat. Do not only mention isolated letters or sounds. ' +
                   "coachSupportText should be one short Hindi/Hinglish meaning of coachReply only. It must not add any question, instruction, or conversation continuation that is missing from coachReply.\n\n" +
@@ -2204,6 +2254,7 @@ async function createAudioPronunciationAssessment({
       audioScore: strictOutcome.audioScore,
       transcriptScore,
       verdict: strictOutcome.verdict,
+      tips: getDiagnosticPronunciationTips({ assessment: audioAssessment, strictOutcome }),
       strictness: strictOutcome.strictness,
       scoringMode: "audio",
     };
@@ -2491,6 +2542,7 @@ app.post("/api/voice/turn", upload.single("audio"), async (request, response) =>
     const requestedExpectedText = clampText(request.body?.expectedText, "", 300);
     const expectedText = requestedExpectedText || transcript;
     const targetSource = requestedExpectedText ? "provided-target" : "transcript-target";
+    const hasKnownTarget = Boolean(requestedExpectedText);
     const fallback = localPronunciationCheck(expectedText, transcript);
     const conversationText = formatConversationTurns(turns);
     const coachContext =
@@ -2506,7 +2558,7 @@ app.post("/api/voice/turn", upload.single("audio"), async (request, response) =>
       transcript,
       fallback,
       coachContext,
-      hasExpectedTarget: true,
+      hasExpectedTarget: hasKnownTarget,
       targetSource,
     });
     console.log("[voice/turn] pronunciation ready", {
