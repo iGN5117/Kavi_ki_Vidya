@@ -1,4 +1,5 @@
 import type { LessonSkillTag } from "@/src/types/content";
+import { advancedLessonSkillProfiles } from "@/src/content/advancedCurriculum";
 import { expandedLessonSkillProfiles } from "@/src/content/expandedCurriculum";
 
 export const lessonSkillProfiles: Record<string, LessonSkillTag[]> = {
@@ -34,6 +35,7 @@ export const lessonSkillProfiles: Record<string, LessonSkillTag[]> = {
   "summarize-service-problem": ["summary", "already", "present-perfect", "service-request", "problem-reporting"],
   "community-decision-discussion": ["decision-discussion", "summary", "purpose-connector", "formal-follow-up", "polite-disagreement"],
   ...expandedLessonSkillProfiles,
+  ...advancedLessonSkillProfiles,
 };
 
 export function getLessonSkillTags(lessonId: string): LessonSkillTag[] {

@@ -6,6 +6,7 @@ const configuredBaseUrl =
 const requestTimeoutMs = Number(process.env.VERIFY_SPEAK_TIMEOUT_MS || 60000);
 const rootBaseUrl = getRootBaseUrl(configuredBaseUrl);
 const runVoiceChecks = process.argv.includes("--voice") || process.env.VERIFY_SPEAK_WITH_VOICE === "1";
+const { getStrictPronunciationOutcome } = require("../server/dev-server");
 
 function getRootBaseUrl(value) {
   const trimmed = String(value).replace(/\/+$/, "");
@@ -186,6 +187,57 @@ function verifyDeterministicSpeakGuards() {
   );
   assertIHeardTranscriptIsEnglishScript("I want to talk to the teacher.", "English transcript");
   console.log("OK deterministic Speak guard assertions passed");
+}
+
+function verifyPronunciationScoringTolerance() {
+  const smallRhythmDip = getStrictPronunciationOutcome({
+    audioAssessment: {
+      score: 92,
+      audioScore: 92,
+      clarityScore: 88,
+      soundAccuracyScore: 88,
+      rhythmScore: 76,
+    },
+    transcriptScore: 100,
+    hasExpectedTarget: true,
+    targetSource: "provided-target",
+  });
+
+  assert(
+    smallRhythmDip.verdict === "clear",
+    `Small rhythm dips in clear Indian English should not force a repeat. Got: ${stringify(smallRhythmDip)}`
+  );
+  assert(
+    smallRhythmDip.finalScore > 85,
+    `Small rhythm dips should not be collapsed into the old 85% near-clear cap. Got: ${stringify(smallRhythmDip)}`
+  );
+  assert(
+    !smallRhythmDip.strictness.capsApplied.some((reason) => reason.includes("rhythm")),
+    `Small rhythm dips should be advisory, not a hard cap. Got: ${stringify(smallRhythmDip)}`
+  );
+
+  const hardRhythmProblem = getStrictPronunciationOutcome({
+    audioAssessment: {
+      score: 92,
+      audioScore: 92,
+      clarityScore: 88,
+      soundAccuracyScore: 88,
+      rhythmScore: 50,
+    },
+    transcriptScore: 100,
+    hasExpectedTarget: true,
+    targetSource: "provided-target",
+  });
+
+  assert(
+    hardRhythmProblem.verdict !== "clear",
+    `Rhythm that makes speech hard to follow should still block clear. Got: ${stringify(hardRhythmProblem)}`
+  );
+  assert(
+    hardRhythmProblem.strictness.capsApplied.includes("rhythm made the sentence hard to follow"),
+    `Hard rhythm problems should explain the cap. Got: ${stringify(hardRhythmProblem)}`
+  );
+  console.log("OK pronunciation scoring treats minor rhythm as advisory");
 }
 
 async function verifyGreetingReviewUsesActualSession() {
@@ -420,6 +472,7 @@ async function verifyVoiceTurnRegression() {
 async function main() {
   console.log(`Verifying Speak regressions at ${rootBaseUrl}`);
   verifyDeterministicSpeakGuards();
+  verifyPronunciationScoringTolerance();
   await expectHealth();
   await verifyGreetingReviewUsesActualSession();
   await verifyGrammarReviewCorrections();

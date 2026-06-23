@@ -1869,6 +1869,8 @@ function getPronunciationScoringConfig({ hasExpectedTarget, targetSource }) {
     minClarityForClear: getEnvNumber("PRONUNCIATION_MIN_CLARITY_FOR_CLEAR", hasKnownTarget ? 86 : 78, 70, 98),
     minSoundForClear: getEnvNumber("PRONUNCIATION_MIN_SOUND_FOR_CLEAR", hasKnownTarget ? 86 : 76, 70, 98),
     minRhythmForClear: getEnvNumber("PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR", hasKnownTarget ? 78 : 70, 60, 98),
+    minRhythmHardFloor: getEnvNumber("PRONUNCIATION_MIN_RHYTHM_HARD_FLOOR", hasKnownTarget ? 62 : 58, 45, 85),
+    componentTolerance: getEnvNumber("PRONUNCIATION_COMPONENT_TOLERANCE", hasKnownTarget ? 4 : 6, 0, 12),
   };
 }
 
@@ -1883,20 +1885,31 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
   const rhythmScore = audioAssessment.rhythmScore;
   const componentScores = [clarityScore, soundAccuracyScore, rhythmScore].filter((score) => typeof score === "number");
   const lowestComponent = componentScores.length ? Math.min(...componentScores) : undefined;
-  const nearClearCap = Math.max(config.practiceThreshold, config.clearThreshold - 5);
+  const hardComponentCap = Math.max(config.practiceThreshold, config.clearThreshold - 8);
+  const minClearClarity = Math.max(0, config.minClarityForClear - config.componentTolerance);
+  const minClearSound = Math.max(0, config.minSoundForClear - config.componentTolerance);
 
   const capReasons = [];
+  const advisories = [];
   if (hasKnownTarget && transcriptScore < 85) capReasons.push({ cap: 84, reason: "target words were not reliably heard" });
   if (hasKnownTarget && transcriptScore < 70) capReasons.push({ cap: 69, reason: "too many target words were missed" });
-  if (audioScore < config.clearThreshold) capReasons.push({ cap: nearClearCap, reason: "audio score was below clear threshold" });
-  if (typeof clarityScore === "number" && clarityScore < config.minClarityForClear) {
-    capReasons.push({ cap: nearClearCap, reason: "clarity needs one more pass" });
+  if (audioScore < config.practiceThreshold) capReasons.push({ cap: config.practiceThreshold - 1, reason: "audio was hard to understand" });
+  if (typeof clarityScore === "number" && clarityScore < minClearClarity) {
+    capReasons.push({ cap: hardComponentCap, reason: "clarity made key words hard to hear" });
+  } else if (typeof clarityScore === "number" && clarityScore < config.minClarityForClear) {
+    advisories.push("clarity can be smoother");
   }
-  if (typeof soundAccuracyScore === "number" && soundAccuracyScore < config.minSoundForClear) {
-    capReasons.push({ cap: nearClearCap, reason: "key sounds need one more pass" });
+  if (typeof soundAccuracyScore === "number" && soundAccuracyScore < minClearSound) {
+    capReasons.push({ cap: hardComponentCap, reason: "key sounds were hard to hear" });
+  } else if (typeof soundAccuracyScore === "number" && soundAccuracyScore < config.minSoundForClear) {
+    advisories.push("key sounds can be cleaner");
   }
-  if (typeof rhythmScore === "number" && rhythmScore < config.minRhythmForClear) capReasons.push({ cap: 86, reason: "rhythm needs one more pass" });
-  if (typeof lowestComponent === "number" && lowestComponent < 65) capReasons.push({ cap: 69, reason: "one pronunciation component was weak" });
+  if (typeof rhythmScore === "number" && rhythmScore < config.minRhythmHardFloor) {
+    capReasons.push({ cap: hardComponentCap, reason: "rhythm made the sentence hard to follow" });
+  } else if (typeof rhythmScore === "number" && rhythmScore < config.minRhythmForClear) {
+    advisories.push("rhythm can be smoother");
+  }
+  if (typeof lowestComponent === "number" && lowestComponent < 55) capReasons.push({ cap: 69, reason: "one pronunciation component was very weak" });
 
   for (const item of capReasons) {
     finalScore = Math.min(finalScore, item.cap);
@@ -1906,9 +1919,9 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
     finalScore >= config.clearThreshold &&
     audioScore >= config.clearThreshold &&
     (!hasKnownTarget || transcriptScore >= 85) &&
-    (typeof clarityScore !== "number" || clarityScore >= config.minClarityForClear) &&
-    (typeof soundAccuracyScore !== "number" || soundAccuracyScore >= config.minSoundForClear) &&
-    (typeof rhythmScore !== "number" || rhythmScore >= config.minRhythmForClear);
+    (typeof clarityScore !== "number" || clarityScore >= minClearClarity) &&
+    (typeof soundAccuracyScore !== "number" || soundAccuracyScore >= minClearSound) &&
+    (typeof rhythmScore !== "number" || rhythmScore >= config.minRhythmHardFloor);
 
   return {
     finalScore,
@@ -1921,6 +1934,7 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
       practiceThreshold: config.practiceThreshold,
       knownTarget: hasKnownTarget,
       capsApplied: capReasons.map((item) => item.reason),
+      advisories,
     },
   };
 }
@@ -1941,15 +1955,15 @@ function getDiagnosticPronunciationTips({ assessment, strictOutcome }) {
       tips.push(`Say these words clearly: ${retryWords.slice(0, 3).join(", ")}.`);
     }
 
-    if (strictOutcome.strictness.capsApplied.includes("clarity needs one more pass")) {
+    if (strictOutcome.strictness.capsApplied.includes("clarity made key words hard to hear")) {
       tips.push("Speak each word fully, with a small pause between key words.");
     }
 
-    if (strictOutcome.strictness.capsApplied.includes("key sounds need one more pass")) {
+    if (strictOutcome.strictness.capsApplied.includes("key sounds were hard to hear")) {
       tips.push("Listen to the model sentence once, then copy the full word endings.");
     }
 
-    if (strictOutcome.strictness.capsApplied.includes("rhythm needs one more pass")) {
+    if (strictOutcome.strictness.capsApplied.includes("rhythm made the sentence hard to follow")) {
       tips.push("Use a steady rhythm instead of rushing the middle of the sentence.");
     }
   }
@@ -2208,7 +2222,7 @@ async function createAudioPronunciationAssessment({
           {
             role: "system",
             content:
-              "You are Kavi ki Vidya's pronunciation assessor and warm Indian woman English speaking coach for Indian learners. Listen to the learner audio itself. Be accent-aware and supportive, but strict about whether the spoken English was pronounced clearly enough for a real listener.",
+              "You are Kavi ki Vidya's pronunciation assessor and warm Indian woman English speaking coach for Indian learners. Listen to the learner audio itself. Be accent-aware and supportive. Judge whether the spoken English is understandable for everyday Indian English conversation, not whether it matches American or British rhythm.",
           },
           {
             role: "user",
@@ -2219,8 +2233,8 @@ async function createAudioPronunciationAssessment({
                   "Assess this pronunciation attempt. Do not rely only on the transcript; use the audio for clarity, sounds, syllables, stress, rhythm, and missing words. " +
                   "Return only JSON with score, verdict, summary, tips, retryWords, problemSounds, clarityScore, soundAccuracyScore, rhythmScore, coachReply, and coachSupportText. " +
                   "Score pronunciation, not grammar. If the sentence grammar is wrong but the learner pronounced every spoken word clearly, keep the pronunciation component scores high and let coachReply handle the grammar correction separately. " +
-                  "Do not penalize normal Indian English accent patterns, but do penalize swallowed endings, missing syllables, substituted words, unclear vowel/consonant sounds, or rhythm that makes the sentence hard to follow. " +
-                  "Use score 90-100 only when every word is clear, key sounds are accurate, and the rhythm is easy to follow. Use 70-89 when understandable but noticeably unclear. Use below 70 when key words, syllables, or sounds are unclear. " +
+                  "Do not penalize normal Indian English accent patterns or natural Indian English rhythm. Penalize swallowed endings, missing syllables, substituted words, unclear vowel/consonant sounds, or rhythm only when it makes the sentence hard to follow. " +
+                  "Use score 90-100 when the words are clear and easy to understand, even if the accent is recognizably Indian English. Use 70-89 when understandable but noticeably unclear. Use below 70 when key words, syllables, or sounds are unclear. " +
                   'verdict must be "clear", "practice-again", or "try-again". Tips must be short next-attempt actions. ' +
                   "When verdict is not clear, summary must name the main spoken issue in plain words, such as a missed word, unclear ending, rushed rhythm, low volume, or unclear vowel/consonant. " +
                   "When verdict is not clear, problemSounds must contain concrete focus items from the audio, such as whole words, syllables, or short sound notes. Do not return vague items like 'pronunciation' or 'clarity'. " +
@@ -2946,8 +2960,21 @@ function installRealtimeWebSocketBridge(httpServer) {
   });
 }
 
-const server = app.listen(port, () => {
-  console.log(`Kavi ki Vidya dev server running on http://localhost:${port}`);
-});
+function startServer() {
+  const server = app.listen(port, () => {
+    console.log(`Kavi ki Vidya dev server running on http://localhost:${port}`);
+  });
 
-installRealtimeWebSocketBridge(server);
+  installRealtimeWebSocketBridge(server);
+  return server;
+}
+
+if (require.main === module) {
+  startServer();
+}
+
+module.exports = {
+  getPronunciationScoringConfig,
+  getStrictPronunciationOutcome,
+  startServer,
+};

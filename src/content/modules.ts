@@ -1,4 +1,5 @@
 import type { LearningModule } from "@/src/types/content";
+import { advancedModules } from "@/src/content/advancedCurriculum";
 import { expandedModules } from "@/src/content/expandedCurriculum";
 
 export const modules: LearningModule[] = [
@@ -85,4 +86,5 @@ export const modules: LearningModule[] = [
     ],
   },
   ...expandedModules,
+  ...advancedModules,
 ];

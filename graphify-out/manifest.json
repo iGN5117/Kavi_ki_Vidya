@@ -80,8 +80,8 @@
     "hash": "368c2d5bc1ea37b87a4b3c6fb2436803"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/dev-server.js": {
-    "mtime": 1781614897.3270266,
-    "hash": "ba8746a41cbfcfaead1d7d52a79a349f"
+    "mtime": 1782186078.9052732,
+    "hash": "97203649cf6348af8547c4d82299cd23"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/progress-store.js": {
     "mtime": 1777501462.1939101,
@@ -65212,8 +65212,8 @@
     "hash": "39c28e44aca9e28c0e25c6e571cc8d49"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/scripts/verify-speak-regressions.js": {
-    "mtime": 1781614926.8488853,
-    "hash": "58d4e10acaf238fabb35a348bb6389a2"
+    "mtime": 1782186091.8016274,
+    "hash": "85d35449efb93ef2739240d7947a413a"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/scripts/run-android-verification-session.js": {
     "mtime": 1780803978.826777,
@@ -65268,16 +65268,20 @@
     "hash": "0140ed958afe210788accd5f9fe1ccd8"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/content/modules.ts": {
-    "mtime": 1781614743.064433,
-    "hash": "9d7a21fa99dd1b263c4fcfb4d0753be2"
+    "mtime": 1782185931.8437653,
+    "hash": "cb72f5ebfb319dde43a37f2ce17e4103"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/content/advancedCurriculum.ts": {
+    "mtime": 1782185986.0373404,
+    "hash": "efffae23156c9986d56a75e31b805090"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/content/lessonSkillProfiles.ts": {
-    "mtime": 1781614774.2960901,
-    "hash": "ba350049e8c7e8ca25be8b57b0f302e1"
+    "mtime": 1782185940.6631188,
+    "hash": "2bf4a98e62cc924fb79a5c401802398a"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/content/lessons.ts": {
-    "mtime": 1781614750.4409976,
-    "hash": "0d96f0e0d11557477e32ffb88a95c405"
+    "mtime": 1782185936.213085,
+    "hash": "5eeae3a60630e18a2a479d0fe248a5b3"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/content/scenarios.ts": {
     "mtime": 1777511774.530923,
@@ -65428,8 +65432,8 @@
     "hash": "bc8c19ff692f0aca0e9d63755809ab11"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/AGENTS.md": {
-    "mtime": 1781614125.071015,
-    "hash": "a51befabef1f212ad3fdea5dd1b2d7ae"
+    "mtime": 1782185498.9304204,
+    "hash": "4e889d6606dbc7604de2882b872667a8"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/docs/design/mobile-ux.md": {
     "mtime": 1777765252.61931,
@@ -65456,8 +65460,8 @@
     "hash": "3310ba61387aa30174a251dd545acd97"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/docs/technical/backend.md": {
-    "mtime": 1781380502.5573003,
-    "hash": "29b3109afa5058a0a1032fc4f349261e"
+    "mtime": 1782185960.3544922,
+    "hash": "6c1c5ab3d121052f5dc20e03e48c68f8"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/docs/technical/account-and-persistence.md": {
     "mtime": 1777765179.681893,
@@ -65587,6 +65591,10 @@
     "mtime": 1777500163.20347,
     "hash": "a0cb7b5772e2b22b4a7c6a9ad3b0509c"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186044074.mp3": {
+    "mtime": 1782186044.0775192,
+    "hash": "4350b6b39958955441747331c8facad4"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778381913095.mp3": {
     "mtime": 1778381913.0959604,
     "hash": "92d0fca0145c2089fc40ff16994db25b"
@@ -65695,6 +65703,10 @@
     "mtime": 1777516896.2754123,
     "hash": "f2c28c4298785e60162f64e9ec721add"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615259188.mp3": {
+    "mtime": 1781615259.1883168,
+    "hash": "a9eb8a280acf6faba6549ca12f90b2d0"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781614962585.mp3": {
     "mtime": 1781614962.5855155,
     "hash": "41c3540519f0067a24f9f1a625f6f68a"
@@ -65718,6 +65730,10 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781382360700.mp3": {
     "mtime": 1781382360.7007737,
     "hash": "3cabf99366dddff9b218450a67cf0e8b"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615247834.mp3": {
+    "mtime": 1781615247.835539,
+    "hash": "b5d41efb3e4d9482b3a88cc1431dd9e2"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777821808307.mp3": {
     "mtime": 1777821808.3080027,
@@ -65774,6 +65790,14 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777823919373.mp3": {
     "mtime": 1777823919.3746543,
     "hash": "4b7ff65d3199fde5de5d01b5dd4c311d"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186054563.mp3": {
+    "mtime": 1782186054.5639915,
+    "hash": "2b618937311fc7b1eea4f6de0d88207c"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186149308.mp3": {
+    "mtime": 1782186149.3088484,
+    "hash": "967529a53b4c5b7cc0aa6e3958319382"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777822693419.mp3": {
     "mtime": 1777822693.4206884,
@@ -65883,6 +65907,10 @@
     "mtime": 1777493672.5052552,
     "hash": "b324ce445d847b07cad6ac189be59042"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186156603.mp3": {
+    "mtime": 1782186156.604092,
+    "hash": "5f0c6f9305c2b303e53190c7393bafc7"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777822709657.mp3": {
     "mtime": 1777822709.6583486,
     "hash": "a1cd5a55f7e2aff67fcc1bf88abe7860"
@@ -65907,6 +65935,10 @@
     "mtime": 1778385386.0918856,
     "hash": "0839dbe47f24f4b0c54e8226fbaada1e"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186032219.mp3": {
+    "mtime": 1782186032.2204137,
+    "hash": "c289c16dd746b9c3e0d857168183d784"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781382477454.mp3": {
     "mtime": 1781382477.4553351,
     "hash": "c4fc802de92abf0bfbfa2bba703fb66f"
@@ -65914,6 +65946,10 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778385398534.mp3": {
     "mtime": 1778385398.5352323,
     "hash": "351f7fbac5c1b11f89f42ac96a1b7748"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186134456.mp3": {
+    "mtime": 1782186134.4575582,
+    "hash": "671900fa7b4b2c88546a5e81e1146af1"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781382487412.mp3": {
     "mtime": 1781382487.4133866,
@@ -65947,6 +65983,10 @@
     "mtime": 1778385402.6622303,
     "hash": "11fe638fc23bde532aaa566973a49a3e"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186037033.mp3": {
+    "mtime": 1782186037.0337703,
+    "hash": "770be145a680d8303a10d985a2ece5d7"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777574912810.mp3": {
     "mtime": 1777574912.811259,
     "hash": "400d801a3f0c2057a9b1423d68be2889"
@@ -65979,6 +66019,10 @@
     "mtime": 1777823655.3531537,
     "hash": "654fe2b682d39fe785a272e4bbb344bf"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186049895.mp3": {
+    "mtime": 1782186049.8964355,
+    "hash": "986cf39890fbe6630d9f312eeee118b6"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778382245070.mp3": {
     "mtime": 1778382245.0705893,
     "hash": "acc3545220686a11c38b3e09056b3c9c"
@@ -65991,9 +66035,17 @@
     "mtime": 1777506539.3960664,
     "hash": "3c7d15bee75afc3666da85c7c47bec82"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615331703.mp3": {
+    "mtime": 1781615331.7079027,
+    "hash": "887a086032eb2d83c97f2fe83f104a9a"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781380300192.mp3": {
     "mtime": 1781380300.193214,
     "hash": "de701ee6bf8bc93e7e5fab3ba3517d4a"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186022400.mp3": {
+    "mtime": 1782186022.400826,
+    "hash": "797920aed3afbf80e1a1dbeddb7192ab"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777506546743.mp3": {
     "mtime": 1777506546.743429,
@@ -66015,6 +66067,10 @@
     "mtime": 1777494669.793248,
     "hash": "3e8c4d380d2ca5538dd9b550e494c841"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615251839.mp3": {
+    "mtime": 1781615251.8397915,
+    "hash": "670d46cdd6d344661db1eb45fdfc0f55"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778382244394.mp3": {
     "mtime": 1778382244.3978095,
     "hash": "4cb4dc91063f96a765c40f225a55796f"
@@ -66031,6 +66087,10 @@
     "mtime": 1781380583.8285189,
     "hash": "40aa95249c862ea21067c1a42aa3bfa7"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186037828.mp3": {
+    "mtime": 1782186037.8291273,
+    "hash": "a9b582808b68d3f6d06d3af1d6472de0"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781362292121.mp3": {
     "mtime": 1781362292.1221983,
     "hash": "a78b58ac77e807a52dd08177f0bd13b3"
@@ -66043,6 +66103,10 @@
     "mtime": 1777575282.9161406,
     "hash": "59eee955d5c579b4a2a213fc5b48150b"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615263726.mp3": {
+    "mtime": 1781615263.7270293,
+    "hash": "6db133eeeeb5113dbb4ac9831dcf6776"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777574821953.mp3": {
     "mtime": 1777574821.954264,
     "hash": "e7241c70f2f70dbd0d915deebe67b841"
@@ -66050,6 +66114,10 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781380543550.mp3": {
     "mtime": 1781380543.550615,
     "hash": "95b3b089aad4fdb11c4a0b478bcca15c"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186125430.mp3": {
+    "mtime": 1782186125.4305515,
+    "hash": "0addaf0c96bcf3e01c1449dbfe108b35"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777575549208.mp3": {
     "mtime": 1777575549.208758,
@@ -66087,6 +66155,10 @@
     "mtime": 1777503990.593439,
     "hash": "04308c1fa678b1db0e08263a401eeedf"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615393549.mp3": {
+    "mtime": 1781615393.5520513,
+    "hash": "d3d436234780d6e74f1c1cb140adaac8"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781614990550.mp3": {
     "mtime": 1781614990.5513878,
     "hash": "b1ae0a808883739b9eb5f3d4e360785e"
@@ -66107,6 +66179,10 @@
     "mtime": 1781380595.1729429,
     "hash": "b590763f8c161abac1e1d48c169864fb"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186114851.mp3": {
+    "mtime": 1782186114.8540316,
+    "hash": "00d8cb7a7f70afc24163e3958d4c174c"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777823991192.mp3": {
     "mtime": 1777823991.1929321,
     "hash": "7da46998a1116ade90fb2aa2229f179e"
@@ -66119,9 +66195,17 @@
     "mtime": 1777575946.8507729,
     "hash": "f1dcf0caebe40574530f89bd2f96b856"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186140019.mp3": {
+    "mtime": 1782186140.0198126,
+    "hash": "3dfff5b38b50d5954425cac4f3948909"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781382492299.mp3": {
     "mtime": 1781382492.29933,
     "hash": "c99de6d132c8e9f547d3a72c1798fad9"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186016289.mp3": {
+    "mtime": 1782186016.290648,
+    "hash": "f53cb7c95a07e3448489327edd4e60b0"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781360261893.mp3": {
     "mtime": 1781360261.894455,
@@ -66134,6 +66218,14 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777493670220.mp3": {
     "mtime": 1777493670.2254956,
     "hash": "d95e41a3bce6b9f29cc9f42502b6970e"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186144320.mp3": {
+    "mtime": 1782186144.321472,
+    "hash": "55c7ab2477c75876a5091312af2f2352"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615268562.mp3": {
+    "mtime": 1781615268.5631325,
+    "hash": "5f72b37956f2b0db9c10ac503b08c8ec"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778384931966.mp3": {
     "mtime": 1778384931.9692526,
@@ -66159,6 +66251,10 @@
     "mtime": 1777821781.5191355,
     "hash": "4d014d4ffd567bfbef9b1ce63e988bae"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1782186138991.mp3": {
+    "mtime": 1782186138.9923103,
+    "hash": "ecfc2631762058f4f36eba87ad61d68e"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781380295924.mp3": {
     "mtime": 1781380295.9248748,
     "hash": "834db757c25d7d8b6786d6163050216f"
@@ -66178,6 +66274,10 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1778385388613.mp3": {
     "mtime": 1778385388.6136796,
     "hash": "23e871d098192ae9e705792565ecb1cb"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615365452.mp3": {
+    "mtime": 1781615365.4528034,
+    "hash": "e6b059bc654869be41f47070e5474612"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781298522128.mp3": {
     "mtime": 1781298522.1336079,
@@ -66210,6 +66310,10 @@
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777823007166.mp3": {
     "mtime": 1777823007.169363,
     "hash": "88ea8f8e42c668ebbf48dd3d48961d71"
+  },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1781615252607.mp3": {
+    "mtime": 1781615252.6081507,
+    "hash": "3c0cc68c8d3a8614a9f1d394e6848598"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/tmp/audio/coach-1777575340823.mp3": {
     "mtime": 1777575340.8245153,
