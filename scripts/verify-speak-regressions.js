@@ -364,6 +364,27 @@ async function verifyShortTextTurnHandling() {
   console.log("OK short/empty text turn is handled gracefully");
 }
 
+async function verifyOversizedVoiceHistoryReturnsJson() {
+  const form = new FormData();
+  form.append("audio", new Blob([Buffer.alloc(2048)], { type: "audio/mpeg" }), "short.mp3");
+  form.append("instructions", "You are a supportive English coach.");
+  form.append("turns", "x".repeat(700 * 1024));
+
+  const { response, json } = await requestJson("/api/voice/turn", {
+    method: "POST",
+    body: form,
+    timeoutMs: 30000,
+  });
+
+  assert(response.status === 413, `Oversized voice history should return HTTP 413. Got ${response.status}: ${stringify(json)}`);
+  assert(json.code === "LIMIT_FIELD_VALUE", `Oversized voice history should expose LIMIT_FIELD_VALUE. Got: ${stringify(json)}`);
+  assert(
+    includesText(json.error, "conversation history is too long"),
+    `Oversized voice history should explain the session-history problem. Got: ${stringify(json)}`
+  );
+  console.log("OK oversized voice history returns a clear JSON error");
+}
+
 function isMostlyLatin(value) {
   const text = String(value || "").trim();
   if (!text) return false;
@@ -478,6 +499,7 @@ async function main() {
   await verifyGrammarReviewCorrections();
   await verifyTextTurnSupportText();
   await verifyShortTextTurnHandling();
+  await verifyOversizedVoiceHistoryReturnsJson();
 
   if (runVoiceChecks) {
     await verifyVoiceTurnRegression();

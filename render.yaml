@@ -38,6 +38,8 @@ services:
         value: "78"
       - key: OPENAI_TRANSCRIBE_LANGUAGE
         value: en
+      - key: VOICE_FORM_FIELD_SIZE_BYTES
+        value: "524288"
       - key: PROGRESS_STORAGE_PROVIDER
         value: supabase-rest
       - key: SUPABASE_URL

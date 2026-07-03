@@ -58,6 +58,37 @@ type HealthResponse = {
 };
 
 const endpoint = process.env.EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT;
+const voiceHistoryTurnLimit = 8;
+
+function clampField(value: string | undefined, maxLength: number) {
+  const text = String(value || "").trim().replace(/\s+/g, " ");
+  return text.length > maxLength ? text.slice(0, maxLength).trim() : text;
+}
+
+export function getCompactVoiceTurns(turns: ConversationTurn[]) {
+  return turns
+    .slice(-voiceHistoryTurnLimit)
+    .map((turn) => ({
+      speaker: turn.speaker,
+      text: clampField(turn.text, 500),
+      supportText: clampField(turn.supportText, 180) || undefined,
+      pronunciation: turn.pronunciation
+        ? {
+            score: turn.pronunciation.score,
+            verdict: turn.pronunciation.verdict,
+            scoringMode: turn.pronunciation.scoringMode,
+            summary: clampField(turn.pronunciation.summary, 160),
+            tips: (turn.pronunciation.tips || []).slice(0, 2).map((tip) => clampField(tip, 80)),
+            retryWords: (turn.pronunciation.retryWords || []).slice(0, 3).map((word) => clampField(word, 40)),
+          }
+        : undefined,
+    }))
+    .filter((turn) => turn.text.length > 0);
+}
+
+export function serializeVoiceTurnHistory(turns: ConversationTurn[]) {
+  return JSON.stringify(getCompactVoiceTurns(turns));
+}
 
 function getConfiguredEndpoint() {
   const configuredEndpoint = endpoint?.replace(/\/+$/, "");
@@ -302,7 +333,7 @@ export async function sendVoiceTurn(audioUri: string, instructions: string, turn
   const audioUploadInfo = getAudioUploadInfo(audioUri);
 
   formData.append("instructions", instructions);
-  formData.append("turns", JSON.stringify(turns));
+  formData.append("turns", serializeVoiceTurnHistory(turns));
   if (expectedText?.trim()) {
     formData.append("expectedText", expectedText.trim());
   }

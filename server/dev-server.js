@@ -14,12 +14,13 @@ const { WebSocket, WebSocketServer } = require("ws");
 const { createProgressRepository } = require("./progress-store");
 
 const app = express();
+const formFieldSizeBytes = Number(process.env.VOICE_FORM_FIELD_SIZE_BYTES || 512 * 1024);
 const upload = multer({
   dest: "server/tmp",
   limits: {
     fileSize: 15 * 1024 * 1024,
     fields: 8,
-    fieldSize: 24 * 1024,
+    fieldSize: Number.isFinite(formFieldSizeBytes) && formFieldSizeBytes > 0 ? formFieldSizeBytes : 512 * 1024,
   },
 });
 const port = Number(process.env.PORT || 8787);
@@ -55,6 +56,34 @@ app.set("trust proxy", true);
 app.use(cors());
 app.use(express.json({ limit: "128kb" }));
 app.use("/audio", express.static("server/tmp/audio"));
+
+function uploadSingleAudio(request, response, next) {
+  upload.single("audio")(request, response, (error) => {
+    if (!error) {
+      next();
+      return;
+    }
+
+    if (error instanceof multer.MulterError) {
+      const isTooLarge = error.code === "LIMIT_FILE_SIZE" || error.code === "LIMIT_FIELD_VALUE";
+      const messageByCode = {
+        LIMIT_FILE_SIZE: "Recording is too large. Try a shorter recording.",
+        LIMIT_FIELD_VALUE: "Conversation history is too long. Start a fresh speaking session, or update the app so it sends compact history.",
+        LIMIT_FIELD_COUNT: "Too many form fields were sent with this recording.",
+        LIMIT_UNEXPECTED_FILE: "Unexpected upload field. Send the recording as the audio field.",
+      };
+
+      response.status(isTooLarge ? 413 : 400).json({
+        error: messageByCode[error.code] || "Recording upload could not be parsed.",
+        code: error.code,
+        field: error.field,
+      });
+      return;
+    }
+
+    next(error);
+  });
+}
 
 app.use((error, _request, response, next) => {
   if (!error) {
@@ -2308,7 +2337,7 @@ app.post("/api/audio/sentence", async (request, response) => {
   }
 });
 
-app.post("/api/pronunciation/check", upload.single("audio"), async (request, response) => {
+app.post("/api/pronunciation/check", uploadSingleAudio, async (request, response) => {
   const audioFile = request.file;
   if (!audioFile) {
     response.status(400).json({ error: "Missing audio file." });
@@ -2485,7 +2514,7 @@ app.post("/api/realtime/call", express.text({ type: ["application/sdp", "text/pl
   }
 });
 
-app.post("/api/voice/turn", upload.single("audio"), async (request, response) => {
+app.post("/api/voice/turn", uploadSingleAudio, async (request, response) => {
   const audioFile = request.file;
   if (!audioFile) {
     response.status(400).json({ error: "Missing audio file." });

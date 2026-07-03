@@ -1,17 +1,16 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-06-22 11:43pm EDT
+# [English_Learning_App_Codex] recent context, 2026-07-02 11:13pm EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (19,388t read) | 670,558t work | 97% savings
+Stats: 50 obs (19,517t read) | 694,208t work | 97% savings
 
 ### May 3, 2026
-2 11:11a 🔵 Turn-Based Chat Broken — Infinite Refresh Spinner
-3 " 🔵 Voice/Turn Endpoint Receives Audio But Produces No Response
+3 11:11a 🔵 Voice/Turn Endpoint Receives Audio But Produces No Response
 4 " 🔵 Voice/Turn Pipeline Architecture Mapped: 3 Sequential OpenAI Calls
 5 11:12a 🔵 Voice/Turn Actually Has 4 OpenAI Calls; Audio Assessment Step Likely Cause of Hang
 6 " 🔴 Added OpenAI Request Timeouts to Prevent Infinite Hang in Voice/Turn Pipeline
@@ -62,8 +61,10 @@ Stats: 50 obs (19,388t read) | 670,558t work | 97% savings
 340 " 🟣 ConversationBubble Shows Pronunciation Focus Items and Tips
 341 " 🟣 Voice Turn Regression Tests Extended with knownTarget Flag Assertions
 342 " 🔵 Dev Server Only Reachable from Within verify Script Process, Not from Shell curl/node
+### Jul 2, 2026
+807 11:06p 🔵 Backend Architecture: Render API + Supabase Split
 
-Access 671k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 694k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify
