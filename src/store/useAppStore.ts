@@ -229,12 +229,6 @@ function getFutureIsoDate(daysFromNow: number) {
   return date.toISOString();
 }
 
-function getReviewSchedule(score: number) {
-  if (score >= 90) return { dueAt: getFutureIsoDate(3), priority: "low" as const, detail: "Review in a few days to keep it fresh." };
-  if (score >= 75) return { dueAt: getFutureIsoDate(1), priority: "normal" as const, detail: "Repeat once tomorrow to make it natural." };
-  return { dueAt: new Date().toISOString(), priority: "high" as const, detail: "Try this again slowly before tomorrow." };
-}
-
 export function getDailyGoalStatus(
   state: DailyGoalStatusInput,
   today = getLocalDateKey(),
@@ -587,20 +581,20 @@ export const useAppStore = create<AppState>()((set) => ({
             checkedCount: Math.max(0, attempt.checkedCount),
             retryCount: Math.max(0, attempt.retryCount),
             reviewPrompts: attempt.reviewPrompts.slice(0, 6),
+            activityResults: attempt.activityResults?.slice(0, 40),
           }
         : undefined;
-      const reviewSchedule = lessonAttempt ? getReviewSchedule(lessonAttempt.score) : undefined;
       const reviewItems: ReviewQueueItem[] = lessonAttempt
         ? lessonAttempt.reviewPrompts.map((prompt, index) => ({
             id: `${lessonId}-${completedAt}-${index}`,
             source: "lesson",
             title: "Lesson review",
             prompt,
-            detail: reviewSchedule?.detail ?? "Repeat once to keep it fresh.",
+            detail: "Try this again slowly before tomorrow.",
             createdAt: completedAt,
             completedAt: null,
-            dueAt: reviewSchedule?.dueAt ?? completedAt,
-            priority: reviewSchedule?.priority ?? "normal",
+            dueAt: completedAt,
+            priority: "high",
           }))
         : [];
 

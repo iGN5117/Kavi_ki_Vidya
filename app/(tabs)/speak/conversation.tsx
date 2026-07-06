@@ -24,7 +24,6 @@ import {
   checkPracticeConnection,
   checkLessonPronunciation,
   createLessonAudio,
-  createRealtimeSession,
   generateSessionFeedback,
   getInitialPracticeConnectionStatus,
   sendVoiceTurn,
@@ -34,6 +33,7 @@ import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
 import type { LocalizedSupport } from "@/src/types/content";
 import type { ConversationMode, ConversationTurn, CoachState, PronunciationCheckResult, SpeakingFeedback } from "@/src/types/speaking";
+import { isPronunciationClear, normalizePronunciationScore, pronunciationScorePolicy } from "@/shared/scoringPolicy";
 
 type VoiceTurnResult = {
   transcript: string;
@@ -76,17 +76,6 @@ const speakingRecordingOptions = {
     bitsPerSecond: 128000,
   },
 } satisfies typeof RecordingPresets.HIGH_QUALITY;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMillis: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("Timed out.")), timeoutMillis);
-
-    promise
-      .then(resolve)
-      .catch(reject)
-      .finally(() => clearTimeout(timeout));
-  });
-}
 
 function normalizeParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -454,10 +443,9 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
       setMicHelpText(null);
       setConnectionNote(
         connectionStatus.localApiReachable
-          ? "Listening with the local API ready. Speak naturally, then stop recording."
+          ? "Listening. Speak naturally, then stop recording."
           : "Recording for demo practice. Speak naturally, then stop recording."
       );
-      void withTimeout(createRealtimeSession(instructions), 1200).catch(() => undefined);
     } catch (error) {
       setCoachState("neutral");
       const message = error instanceof Error ? error.message : "Could not start recording.";
@@ -481,6 +469,17 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
     }
 
     return "Voice did not process. Try recording again.";
+  }
+
+  function getPronunciationReadyText(pronunciation: PronunciationCheckResult) {
+    const score = normalizePronunciationScore(pronunciation.score);
+    if (typeof score !== "number") {
+      return "Coach reply is ready. This turn has no pronunciation score.";
+    }
+
+    return pronunciation.scoringMode === "audio"
+      ? `Pronunciation score: ${Math.round(score)}%. Coach reply is ready.`
+      : `Pronunciation check: ${Math.round(score)}%. Coach reply is ready.`;
   }
 
   async function stopRecording() {
@@ -508,12 +507,12 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
           localApiReachable: true,
           openAIAvailable: !result.isDemo,
           openAIUnavailable: Boolean(result.isDemo),
-          label: result.isDemo ? "Local demo" : "Local AI connected",
+          label: result.isDemo ? "Practice mode" : "Voice ready",
         }));
         setConnectionNote(
           result.isDemo
-            ? "Local API returned a demo voice reply because OpenAI is unavailable."
-            : "Local AI used your recording and conversation history."
+            ? "Practice mode reply is ready. This turn has no pronunciation score."
+            : "Coach used your recording and conversation history."
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : "Voice could not be processed.";
@@ -532,23 +531,21 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
 
       try {
         if (result.pronunciation) {
-          setConnectionNote(
-            result.pronunciation.scoringMode === "audio"
-              ? `Deep pronunciation score: ${Math.round(result.pronunciation.score)}%. Coach reply is ready.`
-              : `Pronunciation fallback score: ${Math.round(result.pronunciation.score)}%. Coach reply is ready.`
-          );
+          setConnectionNote(getPronunciationReadyText(result.pronunciation));
           await appendCoachResult(result, "I heard...");
           return;
         }
 
-        const expectedText = practiceDrill?.prompt || result.transcript;
+        if (!practiceDrill?.prompt) {
+          setConnectionNote("Coach reply is ready. This free-chat turn has no pronunciation score.");
+          await appendCoachResult(result, "I heard...");
+          return;
+        }
+
+        const expectedText = practiceDrill.prompt;
         const pronunciation = await checkLessonPronunciation(audioUri, expectedText);
         result = { ...result, pronunciation };
-        setConnectionNote(
-          pronunciation.scoringMode === "audio"
-            ? `Deep pronunciation score: ${Math.round(pronunciation.score)}%. Coach reply is ready.`
-            : `Pronunciation fallback score: ${Math.round(pronunciation.score)}%. Coach reply is ready.`
-        );
+        setConnectionNote(getPronunciationReadyText(pronunciation));
       } catch {
         setConnectionNote("Coach reply is ready. Deep pronunciation scoring was unavailable for this turn.");
       }
@@ -711,15 +708,15 @@ function buildDrillResult(
   feedback: SpeakingFeedback,
   learnerTurnCount: number,
 ) {
-  const rawScore =
-    typeof feedback.pronunciation.score === "number"
-      ? feedback.pronunciation.score
-      : typeof feedback.confidence.score === "number"
-        ? feedback.confidence.score
-        : undefined;
-  const score = typeof rawScore === "number" ? (rawScore <= 1 ? rawScore * 100 : rawScore) : undefined;
+  const score = normalizePronunciationScore(feedback.pronunciation.score);
   const outcome: DrillResultOutcome =
-    typeof score === "number" && score >= 82 ? "improved" : learnerTurnCount > 1 || (score ?? 0) >= 60 ? "practiced" : "needs-retry";
+    typeof score !== "number"
+      ? "practiced"
+      : isPronunciationClear(score)
+        ? "improved"
+        : score >= pronunciationScorePolicy.practiceThreshold
+          ? "practiced"
+          : "needs-retry";
 
   return {
     itemId: practiceDrill.itemId,

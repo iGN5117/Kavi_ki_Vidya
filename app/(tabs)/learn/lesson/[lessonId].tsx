@@ -20,10 +20,12 @@ import { modules } from "@/src/content/modules";
 import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
 import { getLocalizedSupportLines, getPronunciationHelpSupport, getPronunciationSupport } from "@/src/services/i18n/languageSupport";
 import { checkLessonPronunciation, createLessonAudio } from "@/src/services/realtime/realtimeClient";
+import type { LessonActivityAttemptResult } from "@/src/services/sync/progressSync";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
 import type { ExplanationPreference, LessonActivity, LocalizedSupport } from "@/src/types/content";
 import type { PronunciationCheckResult } from "@/src/types/speaking";
+import { isPronunciationClear, normalizePronunciationScore } from "@/shared/scoringPolicy";
 
 const orderedLessonIds = modules.flatMap((module) => module.lessonIds);
 const pronunciationRecordingOptions = {
@@ -69,10 +71,7 @@ export default function LessonScreen() {
   const [answerChecked, setAnswerChecked] = useState(false);
   const [repeatedConfirmed, setRepeatedConfirmed] = useState(false);
   const [spokenConfirmed, setSpokenConfirmed] = useState(false);
-  const [checkedCount, setCheckedCount] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [retryCount, setRetryCount] = useState(0);
-  const [reviewPrompts, setReviewPrompts] = useState<string[]>([]);
+  const [activityResultsByIndex, setActivityResultsByIndex] = useState<Record<number, LessonActivityAttemptResult>>({});
   const [skipVisible, setSkipVisible] = useState(false);
   const [modelAudioUrl, setModelAudioUrl] = useState<string | null>(null);
   const [pronunciationStatus, setPronunciationStatus] = useState<PronunciationStatus>("idle");
@@ -129,7 +128,15 @@ export default function LessonScreen() {
           !skippedModules.includes(candidate.moduleId),
       );
   }, [completedLessons, lesson.id, skippedLessons, skippedModules]);
-  const lessonScore = checkedCount ? Math.round((correctCount / checkedCount) * 100) : 100;
+  const activityResults = useMemo(
+    () => Object.values(activityResultsByIndex).sort((left, right) => left.activityIndex - right.activityIndex),
+    [activityResultsByIndex],
+  );
+  const checkedCount = activityResults.length;
+  const correctCount = activityResults.filter((result) => result.correct).length;
+  const retryCount = activityResults.filter((result) => !result.correct).length;
+  const reviewPrompts = getUniqueReviewPrompts(activityResults.map((result) => result.reviewPrompt).filter((prompt): prompt is string => Boolean(prompt)));
+  const lessonScore = checkedCount ? Math.round((correctCount / checkedCount) * 100) : 0;
 
   useEffect(() => {
     resetInteractionState();
@@ -175,7 +182,7 @@ export default function LessonScreen() {
     return () => {
       isMounted = false;
     };
-  }, [targetSentence]);
+  }, [activityIndex, targetSentence]);
 
   function resetInteractionState() {
     setMeaningVisible(false);
@@ -194,10 +201,23 @@ export default function LessonScreen() {
   }
 
   function resetAttemptState() {
-    setCheckedCount(0);
-    setCorrectCount(0);
-    setRetryCount(0);
-    setReviewPrompts([]);
+    setActivityResultsByIndex({});
+  }
+
+  function recordFirstActivityResult(result: Omit<LessonActivityAttemptResult, "activityIndex" | "activityType">) {
+    if (!activity || activityIndex < 0) return;
+
+    setActivityResultsByIndex((current) => {
+      if (current[activityIndex]) return current;
+      return {
+        ...current,
+        [activityIndex]: {
+          activityIndex,
+          activityType: activity.type,
+          ...result,
+        },
+      };
+    });
   }
 
   function next() {
@@ -208,7 +228,8 @@ export default function LessonScreen() {
         correctCount,
         checkedCount,
         retryCount,
-        reviewPrompts: getUniqueReviewPrompts(reviewPrompts),
+        reviewPrompts,
+        activityResults,
       });
       setActivityIndex(lesson.activities.length);
       return;
@@ -249,13 +270,10 @@ export default function LessonScreen() {
         selectedFixedSentence,
         arrangedWords,
       );
-      setCheckedCount((count) => count + 1);
-      if (answerIsCorrect) {
-        setCorrectCount((count) => count + 1);
-      } else {
-        setRetryCount((count) => count + 1);
-        setReviewPrompts((prompts) => getUniqueReviewPrompts([...prompts, getReviewPromptForActivity(activity)]));
-      }
+      recordFirstActivityResult({
+        correct: answerIsCorrect,
+        ...(answerIsCorrect ? {} : { reviewPrompt: getReviewPromptForActivity(activity) }),
+      });
       setAnswerChecked(true);
       setMeaningVisible(true);
       return;
@@ -324,17 +342,24 @@ export default function LessonScreen() {
       if (activity?.type === "speak") {
         setSpokenConfirmed(true);
       }
-      setCheckedCount((count) => count + 1);
-      if (result.score >= 82) {
-        setCorrectCount((count) => count + 1);
-      } else {
-        setRetryCount((count) => count + 1);
-        setReviewPrompts((prompts) => getUniqueReviewPrompts([...prompts, targetSentence]));
+      const score = normalizePronunciationScore(result.score);
+      if (typeof score === "number") {
+        recordFirstActivityResult({
+          correct: isPronunciationClear(score),
+          score,
+          ...(isPronunciationClear(score) ? {} : { reviewPrompt: targetSentence }),
+        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Pronunciation check failed.";
       setPronunciationStatus("error");
-      setPronunciationHelp(message.includes("transcribe") ? "Could not hear the sentence clearly. Try again slowly." : "Could not check that recording. Try once more.");
+      if (activity?.type === "sentence") {
+        setRepeatedConfirmed(true);
+      }
+      if (activity?.type === "speak") {
+        setSpokenConfirmed(true);
+      }
+      setPronunciationHelp(message.includes("transcribe") ? "Could not hear the sentence clearly. You can continue or try again slowly." : "Could not check that recording. You can continue or try once more.");
     }
   }
 
@@ -368,9 +393,11 @@ export default function LessonScreen() {
           <Text style={styles.copy}>You completed a short English practice. Your streak has started for today.</Text>
           <View style={styles.scoreCard}>
             <Text style={styles.scoreLabel}>Lesson score</Text>
-            <Text style={styles.scoreValue}>{lessonScore}%</Text>
+            <Text style={styles.scoreValue}>{checkedCount ? `${lessonScore}%` : "No score"}</Text>
             <Text style={styles.scoreDetail}>
-              {retryCount
+              {!checkedCount
+                ? "You completed the lesson without a scored check."
+                : retryCount
                 ? `${retryCount} sentence${retryCount === 1 ? "" : "s"} added to Review.`
                 : "Everything looked ready for light review."}
             </Text>
@@ -828,6 +855,7 @@ function PronunciationPractice({
   const pronunciationSupportLines = result
     ? getLocalizedSupportLines(getPronunciationSupport(result), preference)
     : [];
+  const score = normalizePronunciationScore(result?.score);
 
   return (
     <View style={styles.pronunciationPanel}>
@@ -882,7 +910,7 @@ function PronunciationPractice({
         <View style={[styles.feedback, verdictTone]}>
           <View style={styles.verdictHeader}>
             <Text style={styles.feedbackTitle}>{getPronunciationVerdictTitle(result.verdict)}</Text>
-            <Text style={styles.scorePill}>{Math.round(result.score)}%</Text>
+            <Text style={styles.scorePill}>{typeof score === "number" ? `${Math.round(score)}%` : "No score"}</Text>
           </View>
           <Text style={styles.feedbackCopy}>{result.summary}</Text>
           {pronunciationSupportLines.map((line) => (
@@ -891,7 +919,7 @@ function PronunciationPractice({
             </Text>
           ))}
           <Text style={styles.scoringModeText}>
-            {result.scoringMode === "audio" ? "Deep audio scoring" : "Transcript-only fallback"}
+            {typeof score === "number" ? (result.scoringMode === "audio" ? "Audio scoring" : "Word check") : "No score this time"}
           </Text>
           <Text style={styles.transcriptText}>Heard: {result.transcript || "No clear words heard."}</Text>
           <View style={styles.scoreBreakdown}>

@@ -197,8 +197,8 @@ export function getInitialPracticeConnectionStatus(): PracticeConnectionStatus {
       localApiReachable: false,
       openAIAvailable: false,
       openAIUnavailable: false,
-      label: "Demo mode",
-      detail: "Local API is not configured. Text and voice practice use built-in demo replies.",
+      label: "Practice mode",
+      detail: "Practice replies are in demo mode right now.",
     };
   }
 
@@ -208,8 +208,8 @@ export function getInitialPracticeConnectionStatus(): PracticeConnectionStatus {
     localApiReachable: false,
     openAIAvailable: false,
     openAIUnavailable: false,
-    label: "Checking AI",
-    detail: "Checking the local practice API before using live replies.",
+    label: "Checking practice",
+    detail: "Checking voice practice before starting.",
   };
 }
 
@@ -229,8 +229,8 @@ export async function checkPracticeConnection(timeoutMs = 2500): Promise<Practic
         localApiReachable: false,
         openAIAvailable: false,
         openAIUnavailable: false,
-        label: "Demo mode",
-        detail: "Local API is not reachable. Built-in demo replies are available.",
+        label: "Practice mode",
+        detail: "Practice mode is available, but live replies are not connected.",
       };
     }
 
@@ -246,8 +246,8 @@ export async function checkPracticeConnection(timeoutMs = 2500): Promise<Practic
         localApiReachable: true,
         openAIAvailable: false,
         openAIUnavailable: true,
-        label: "Local demo",
-        detail: "Local API is connected, but OpenAI is unavailable. Demo replies will be used.",
+        label: "Practice mode",
+        detail: "Practice mode is available. Voice scoring may be unavailable.",
       };
     }
 
@@ -257,8 +257,8 @@ export async function checkPracticeConnection(timeoutMs = 2500): Promise<Practic
       localApiReachable: true,
       openAIAvailable: true,
       openAIUnavailable: false,
-      label: "Local AI connected",
-      detail: "Local API and OpenAI are available for text and voice practice.",
+      label: "Voice ready",
+      detail: "Voice practice is ready.",
     };
   } catch {
     return {
@@ -267,8 +267,8 @@ export async function checkPracticeConnection(timeoutMs = 2500): Promise<Practic
       localApiReachable: false,
       openAIAvailable: false,
       openAIUnavailable: false,
-      label: "Demo mode",
-      detail: "Local API is not reachable. Built-in demo replies are available.",
+      label: "Practice mode",
+      detail: "Practice mode is available, but live replies are not connected.",
     };
   } finally {
     clearTimeout(timeout);
@@ -442,7 +442,7 @@ export async function generateSessionFeedback(turns: ConversationTurn[], context
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ turns, context }),
+    body: JSON.stringify({ turns: getCompactVoiceTurns(turns), context }),
   });
 
   if (!response.ok) {

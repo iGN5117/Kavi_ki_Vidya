@@ -27,9 +27,9 @@ services:
       - key: PRONUNCIATION_TRANSCRIPT_WEIGHT
         value: "0.08"
       - key: PRONUNCIATION_CLEAR_THRESHOLD
-        value: "90"
+        value: "85"
       - key: PRONUNCIATION_PRACTICE_THRESHOLD
-        value: "70"
+        value: "65"
       - key: PRONUNCIATION_MIN_CLARITY_FOR_CLEAR
         value: "86"
       - key: PRONUNCIATION_MIN_SOUND_FOR_CLEAR

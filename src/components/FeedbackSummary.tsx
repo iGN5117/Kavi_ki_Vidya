@@ -3,6 +3,7 @@ import { BookmarkCheck, BookmarkPlus } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, radii, spacing } from "@/src/theme/theme";
 import type { SpeakingFeedback } from "@/src/types/speaking";
+import { normalizePronunciationScore } from "@/shared/scoringPolicy";
 
 type FeedbackSummaryProps = {
   feedback: SpeakingFeedback;
@@ -12,14 +13,8 @@ type FeedbackSummaryProps = {
 
 export function FeedbackSummary({ feedback, savedPhrases = [], onSavePhrase }: FeedbackSummaryProps) {
   const savedPhraseSet = new Set(savedPhrases);
-  const pronunciationScore =
-    typeof feedback.pronunciation.score === "number"
-      ? Math.max(0, Math.min(100, feedback.pronunciation.score <= 1 ? feedback.pronunciation.score * 100 : feedback.pronunciation.score))
-      : undefined;
-  const confidenceScore =
-    typeof feedback.confidence.score === "number"
-      ? Math.max(0, Math.min(100, feedback.confidence.score <= 1 ? feedback.confidence.score * 100 : feedback.confidence.score))
-      : undefined;
+  const pronunciationScore = normalizePronunciationScore(feedback.pronunciation.score);
+  const confidenceScore = normalizePronunciationScore(feedback.confidence.score);
 
   return (
     <View style={styles.wrap}>

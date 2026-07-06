@@ -1,6 +1,7 @@
 import type { LessonAttempt, ReviewQueueItem, DrillResult } from "@/src/services/sync/progressSync";
 import type { LessonSkillTag } from "@/src/types/content";
 import type { SpeakingFeedback } from "@/src/types/speaking";
+import { isPronunciationClear } from "@/shared/scoringPolicy";
 
 export type PracticeActionHref =
   | "/learn"
@@ -236,7 +237,7 @@ function addPronunciationFocus(focuses: PracticeFocus[], feedback: SpeakingFeedb
     });
   }
 
-  if (typeof score === "number" && score < 85) {
+  if (typeof score === "number" && !isPronunciationClear(score)) {
     addFocus(focuses, {
       id: "pronunciation-clarity",
       kind: "pronunciation",
@@ -271,6 +272,7 @@ function addMistakeFocus(focuses: PracticeFocus[], mistake: string, index: numbe
 }
 
 function addLessonAttemptFocus(focuses: PracticeFocus[], attempt: LessonAttempt, index: number) {
+  if (attempt.checkedCount === 0) return;
   if (attempt.score >= 80 && attempt.retryCount === 0) return;
 
   const prompt = attempt.reviewPrompts[0] || "Review one missed lesson sentence.";
@@ -289,7 +291,7 @@ function addLessonAttemptFocus(focuses: PracticeFocus[], attempt: LessonAttempt,
 }
 
 function addDrillFocus(focuses: PracticeFocus[], result: DrillResult, index: number) {
-  if (result.outcome !== "needs-retry" && (result.score ?? 100) >= 82) return;
+  if (result.outcome !== "needs-retry" && (typeof result.score !== "number" || isPronunciationClear(result.score))) return;
 
   addFocus(focuses, {
     id: `drill-${result.id}`,

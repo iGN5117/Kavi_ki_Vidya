@@ -1,6 +1,7 @@
 import { lessons } from "@/src/content/lessons";
 import { getLearnerPracticePlan } from "@/src/services/adaptive/practicePlan";
 import type { ConversationTurn, PracticeSessionReceipt, SpeakingFeedback } from "@/src/types/speaking";
+import { isPronunciationClear, normalizePronunciationScore } from "@/shared/scoringPolicy";
 
 function cleanSentence(value: string | undefined) {
   return String(value || "").replace(/\s+/g, " ").trim();
@@ -34,10 +35,7 @@ function getUserTurns(turns: ConversationTurn[]) {
     .filter((turn) => turn.speaker === "user")
     .map((turn) => ({
       text: withPunctuation(turn.text),
-      score:
-        typeof turn.pronunciation?.score === "number"
-          ? Math.max(0, Math.min(100, turn.pronunciation.score <= 1 ? turn.pronunciation.score * 100 : turn.pronunciation.score))
-          : undefined,
+      score: normalizePronunciationScore(turn.pronunciation?.score),
     }))
     .filter((turn) => turn.text);
 }
@@ -90,7 +88,10 @@ function getNextStepLesson(feedback: SpeakingFeedback) {
     lessonAttempts: [],
     drillResults: [],
   }).find((item) => item.recommendedLessonId);
-  const fallbackLessonId = typeof feedback.pronunciation.score === "number" && feedback.pronunciation.score < 85 ? "greetings-intro" : "neighbor-small-talk";
+  const fallbackLessonId =
+    typeof feedback.pronunciation.score === "number" && !isPronunciationClear(feedback.pronunciation.score)
+      ? "greetings-intro"
+      : "neighbor-small-talk";
   const lessonId = focus?.recommendedLessonId ?? fallbackLessonId;
   const lesson = lessons.find((item) => item.id === lessonId);
 
@@ -112,9 +113,7 @@ export function buildPracticeSessionReceipt(
   const bestSentence = getBestSentence(turns);
   const grammarFix = getGrammarFix(feedback);
   const pronunciationScore =
-    typeof feedback.pronunciation.score === "number"
-      ? Math.max(0, Math.min(100, feedback.pronunciation.score <= 1 ? feedback.pronunciation.score * 100 : feedback.pronunciation.score))
-      : undefined;
+    normalizePronunciationScore(feedback.pronunciation.score);
 
   return {
     completedAt,

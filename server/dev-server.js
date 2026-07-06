@@ -12,6 +12,12 @@ const OpenAI = require("openai");
 const { toFile } = require("openai/uploads");
 const { WebSocket, WebSocketServer } = require("ws");
 const { createProgressRepository } = require("./progress-store");
+const {
+  getPronunciationBand,
+  isPronunciationClear,
+  normalizePronunciationScore,
+  pronunciationScorePolicy,
+} = require("../shared/scoringPolicy");
 
 const app = express();
 const formFieldSizeBytes = Number(process.env.VOICE_FORM_FIELD_SIZE_BYTES || 512 * 1024);
@@ -1014,7 +1020,7 @@ function localCoachReply(input, turns = [], pronunciation) {
     });
   }
 
-  if (pronunciation?.verdict === "clear" || pronunciation?.score >= 85) {
+  if (pronunciation?.verdict === "clear" || isPronunciationClear(pronunciation?.score)) {
     const cleanInput = clampText(input, "That was clear.", 140);
     return createCoachPayload({
       reply: `Very clear. You said: "${cleanInput}" What else would you like to say?`,
@@ -1060,7 +1066,7 @@ function formatPronunciationContext(pronunciation) {
   }
 
   const modelSentence = getPronunciationModelSentence(pronunciation.expectedText, pronunciation.transcript);
-  const score = typeof pronunciation.score === "number" ? Math.round(pronunciation.score) : undefined;
+  const score = normalizePronunciationScore(pronunciation.score);
   const retryWords = Array.isArray(pronunciation.retryWords) && pronunciation.retryWords.length
     ? pronunciation.retryWords.join(", ")
     : "none";
@@ -1070,12 +1076,12 @@ function formatPronunciationContext(pronunciation) {
 
   return [
     `Pronunciation verdict: ${pronunciation.verdict || "unknown"}.`,
-    score === undefined ? "" : `Pronunciation score: ${score}%.`,
+    score === undefined ? "" : `Pronunciation score: ${Math.round(score)}%.`,
     `Summary: ${pronunciation.summary || "none"}.`,
     `Retry words: ${retryWords}.`,
     `Tips: ${tips}.`,
     `Model sentence to narrate if retry is needed: "${modelSentence}".`,
-    "If verdict is clear or score is 85 or above, do not ask the learner to repeat the same sentence. Praise briefly and continue with a natural next question.",
+    `If verdict is clear or score is ${pronunciationScorePolicy.clearThreshold} or above, do not ask the learner to repeat the same sentence. Praise briefly and continue with a natural next question.`,
     'If verdict is practice-again or try-again, first narrate the full model sentence exactly in quotes after the word "Listen:", then ask for one repeat and mention one specific tip.',
   ].filter(Boolean).join(" ");
 }
@@ -1083,7 +1089,7 @@ function formatPronunciationContext(pronunciation) {
 function needsPronunciationRetry(pronunciation) {
   if (!pronunciation) return false;
   if (pronunciation.verdict === "practice-again" || pronunciation.verdict === "try-again") return true;
-  return typeof pronunciation.score === "number" && pronunciation.score < 85;
+  return typeof pronunciation.score === "number" && !isPronunciationClear(pronunciation.score);
 }
 
 function getPronunciationModelSentence(expectedText, transcript) {
@@ -1421,7 +1427,7 @@ function getTurnPronunciationChecks(turns) {
     .filter((turn) => turn.speaker === "user" && turn.pronunciation && Number.isFinite(turn.pronunciation.score))
     .map((turn) => ({
       ...turn.pronunciation,
-      score: clampNumber(turn.pronunciation.score, 0, 0, 100),
+      score: normalizePronunciationScore(turn.pronunciation.score),
     }));
 }
 
@@ -1443,7 +1449,7 @@ function localFeedback(turns, context) {
   const pronunciationChecks = getTurnPronunciationChecks(turns);
   const latestPronunciation = pronunciationChecks.at(-1);
   const pronunciationScore = getAverageFeedbackScore(pronunciationChecks.map((check) => check.score));
-  const hasClearPronunciation = typeof pronunciationScore === "number" && pronunciationScore >= 85;
+  const hasClearPronunciation = isPronunciationClear(pronunciationScore);
   const retryWords = hasClearPronunciation ? [] : latestPronunciation?.retryWords?.filter(Boolean) || getLocalFeedbackRetryWords(improved);
   const isTinyGreeting = isSmallFeedbackGreeting(lastUserText);
 
@@ -1453,7 +1459,7 @@ function localFeedback(turns, context) {
         ? `Feedback is based on your last spoken sentence: "${lastUserText}". Practice slowly and keep each word separate.`
         : "No spoken learner sentence was captured in this session yet."),
       retryWords,
-      score: pronunciationScore ?? (hasLearnerSpeech ? Math.min(92, 68 + userTexts.length * 4) : undefined),
+      ...(typeof pronunciationScore === "number" ? { score: pronunciationScore } : {}),
       tips: latestPronunciation?.tips?.length
         ? latestPronunciation.tips
         : hasLearnerSpeech
@@ -1481,7 +1487,6 @@ function localFeedback(turns, context) {
             ? "Next, try one full sentence about your day."
             : `Repeat this once more: "${improved}"`
         : "Say one full sentence in the speaking tab.",
-      score: hasLearnerSpeech && !isTinyGreeting ? Math.min(94, 66 + userTexts.length * 6) : undefined,
     },
     savedPhrases: hasLearnerSpeech ? getLocalFeedbackSavedPhrases(userTexts, improved) : [],
     mistakes: getLocalFeedbackMistakes(lastUserText, improved),
@@ -1502,7 +1507,7 @@ function personalizeFeedbackWithTurnPronunciation(feedback, turns) {
   const pronunciationChecks = getTurnPronunciationChecks(turns);
   const latestPronunciation = pronunciationChecks.at(-1);
   const pronunciationScore = getAverageFeedbackScore(pronunciationChecks.map((check) => check.score));
-  const hasClearPronunciation = typeof pronunciationScore === "number" && pronunciationScore >= 85;
+  const hasClearPronunciation = isPronunciationClear(pronunciationScore);
   const hasFeedbackCorrection = feedbackGrammarItems.some(
     (item) =>
       item?.improved &&
@@ -1541,7 +1546,7 @@ function personalizeFeedbackWithTurnPronunciation(feedback, turns) {
         : hasClearPronunciation
           ? []
           : fallbackRetryWords,
-      ...(pronunciationScore === undefined ? {} : { score: pronunciationScore }),
+      ...(typeof pronunciationScore === "number" ? { score: pronunciationScore } : { score: undefined }),
       tips: latestPronunciation?.tips?.length ? latestPronunciation.tips : feedback.pronunciation.tips,
     },
     grammar: {
@@ -1864,13 +1869,14 @@ function getRetryWords(expectedText, transcript) {
 function localPronunciationCheck(expectedText, transcript) {
   const score = scorePronunciationAttempt(expectedText, transcript);
   const retryWords = getRetryWords(expectedText, transcript);
-  const verdict = score >= 88 ? "clear" : score >= 68 ? "practice-again" : "try-again";
+  const verdict = getPronunciationBand(score);
 
   return {
     transcript: clampText(transcript, "", 500),
     expectedText: clampText(expectedText, "", 300),
     modelSentence: getPronunciationModelSentence(expectedText, transcript),
     score,
+    scoreStatus: "scored",
     scoringMode: "transcript",
     transcriptScore: score,
     verdict,
@@ -1889,12 +1895,32 @@ function localPronunciationCheck(expectedText, transcript) {
   };
 }
 
+function markPronunciationUnscored(pronunciation, reason, summary) {
+  const {
+    score,
+    audioScore,
+    transcriptScore,
+    clarityScore,
+    soundAccuracyScore,
+    rhythmScore,
+    strictness,
+    ...rest
+  } = pronunciation || {};
+
+  return {
+    ...rest,
+    scoreStatus: "unscored",
+    scoreReason: reason,
+    summary: summary || rest.summary || "No pronunciation score is available for this turn.",
+  };
+}
+
 function getPronunciationScoringConfig({ hasExpectedTarget, targetSource }) {
   const hasKnownTarget = hasExpectedTarget && targetSource !== "transcript-target";
   return {
     transcriptWeight: getEnvNumber("PRONUNCIATION_TRANSCRIPT_WEIGHT", hasKnownTarget ? 0.08 : 0.04, 0, 0.4),
-    clearThreshold: getEnvNumber("PRONUNCIATION_CLEAR_THRESHOLD", hasKnownTarget ? 90 : 86, 80, 98),
-    practiceThreshold: getEnvNumber("PRONUNCIATION_PRACTICE_THRESHOLD", hasKnownTarget ? 70 : 62, 50, 90),
+    clearThreshold: getEnvNumber("PRONUNCIATION_CLEAR_THRESHOLD", pronunciationScorePolicy.clearThreshold, 80, 98),
+    practiceThreshold: getEnvNumber("PRONUNCIATION_PRACTICE_THRESHOLD", pronunciationScorePolicy.practiceThreshold, 50, 90),
     minClarityForClear: getEnvNumber("PRONUNCIATION_MIN_CLARITY_FOR_CLEAR", hasKnownTarget ? 86 : 78, 70, 98),
     minSoundForClear: getEnvNumber("PRONUNCIATION_MIN_SOUND_FOR_CLEAR", hasKnownTarget ? 86 : 76, 70, 98),
     minRhythmForClear: getEnvNumber("PRONUNCIATION_MIN_RHYTHM_FOR_CLEAR", hasKnownTarget ? 78 : 70, 60, 98),
@@ -1920,8 +1946,12 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
 
   const capReasons = [];
   const advisories = [];
-  if (hasKnownTarget && transcriptScore < 85) capReasons.push({ cap: 84, reason: "target words were not reliably heard" });
-  if (hasKnownTarget && transcriptScore < 70) capReasons.push({ cap: 69, reason: "too many target words were missed" });
+  if (hasKnownTarget && transcriptScore < config.clearThreshold) {
+    capReasons.push({ cap: config.clearThreshold - 1, reason: "target words were not reliably heard" });
+  }
+  if (hasKnownTarget && transcriptScore < config.practiceThreshold) {
+    capReasons.push({ cap: config.practiceThreshold - 1, reason: "too many target words were missed" });
+  }
   if (audioScore < config.practiceThreshold) capReasons.push({ cap: config.practiceThreshold - 1, reason: "audio was hard to understand" });
   if (typeof clarityScore === "number" && clarityScore < minClearClarity) {
     capReasons.push({ cap: hardComponentCap, reason: "clarity made key words hard to hear" });
@@ -1947,7 +1977,7 @@ function getStrictPronunciationOutcome({ audioAssessment, transcriptScore, hasEx
   const canBeClear =
     finalScore >= config.clearThreshold &&
     audioScore >= config.clearThreshold &&
-    (!hasKnownTarget || transcriptScore >= 85) &&
+    (!hasKnownTarget || transcriptScore >= config.clearThreshold) &&
     (typeof clarityScore !== "number" || clarityScore >= minClearClarity) &&
     (typeof soundAccuracyScore !== "number" || soundAccuracyScore >= minClearSound) &&
     (typeof rhythmScore !== "number" || rhythmScore >= config.minRhythmHardFloor);
@@ -2228,14 +2258,14 @@ async function createAudioPronunciationAssessment({
     });
     return {
       ...fallback,
-      summary: "Deep audio scoring could not convert this recording, so this attempt used transcript-only scoring.",
+      summary: "I could not use the full voice check this time, so I checked the words I heard.",
     };
   }
 
   if (!assessmentAudio) {
     return {
       ...fallback,
-      summary: "Deep audio scoring needs a WAV/MP3 recording, or an M4A/AAC-style recording the server can convert. Using transcript-only scoring for this attempt.",
+      summary: "I could not use the full voice check for this recording, so I checked the words I heard.",
     };
   }
 
@@ -2263,7 +2293,7 @@ async function createAudioPronunciationAssessment({
                   "Return only JSON with score, verdict, summary, tips, retryWords, problemSounds, clarityScore, soundAccuracyScore, rhythmScore, coachReply, and coachSupportText. " +
                   "Score pronunciation, not grammar. If the sentence grammar is wrong but the learner pronounced every spoken word clearly, keep the pronunciation component scores high and let coachReply handle the grammar correction separately. " +
                   "Do not penalize normal Indian English accent patterns or natural Indian English rhythm. Penalize swallowed endings, missing syllables, substituted words, unclear vowel/consonant sounds, or rhythm only when it makes the sentence hard to follow. " +
-                  "Use score 90-100 when the words are clear and easy to understand, even if the accent is recognizably Indian English. Use 70-89 when understandable but noticeably unclear. Use below 70 when key words, syllables, or sounds are unclear. " +
+                  `Use score ${pronunciationScorePolicy.clearThreshold}-100 when the words are clear and easy to understand, even if the accent is recognizably Indian English. Use ${pronunciationScorePolicy.practiceThreshold}-${pronunciationScorePolicy.clearThreshold - 1} when understandable but noticeably unclear. Use below ${pronunciationScorePolicy.practiceThreshold} when key words, syllables, or sounds are unclear. ` +
                   'verdict must be "clear", "practice-again", or "try-again". Tips must be short next-attempt actions. ' +
                   "When verdict is not clear, summary must name the main spoken issue in plain words, such as a missed word, unclear ending, rushed rhythm, low volume, or unclear vowel/consonant. " +
                   "When verdict is not clear, problemSounds must contain concrete focus items from the audio, such as whole words, syllables, or short sound notes. Do not return vague items like 'pronunciation' or 'clarity'. " +
@@ -2310,7 +2340,7 @@ async function createAudioPronunciationAssessment({
     });
     return {
       ...fallback,
-      summary: "Deep audio scoring was unavailable, so this attempt used transcript-only scoring.",
+      summary: "I could not use the full voice check this time, so I checked the words I heard.",
     };
   } finally {
     if (assessmentAudio.cleanupPath) {
@@ -2364,7 +2394,12 @@ app.post("/api/pronunciation/check", uploadSingleAudio, async (request, response
 
     if (!openai) {
       response.json({
-        ...localPronunciationCheck(expectedText, expectedText),
+        ...markPronunciationUnscored(
+          localPronunciationCheck(expectedText, ""),
+          "demo-mode",
+          "Pronunciation scoring is unavailable in demo mode. You can continue after recording."
+        ),
+        targetSource: "provided-target",
         isDemo: true,
       });
       return;
@@ -2408,6 +2443,7 @@ app.post("/api/pronunciation/check", uploadSingleAudio, async (request, response
       ...assessment,
       transcript,
       expectedText,
+      targetSource: "provided-target",
       isDemo: assessment.scoringMode !== "audio",
     });
   } catch (error) {
@@ -2544,7 +2580,11 @@ app.post("/api/voice/turn", uploadSingleAudio, async (request, response) => {
 
     if (!openai) {
       const transcript = "I want talk teacher.";
-      const pronunciation = localPronunciationCheck(transcript, transcript);
+      const pronunciation = markPronunciationUnscored(
+        localPronunciationCheck(transcript, transcript),
+        "demo-mode",
+        "Demo voice reply is available, but this turn was not pronunciation scored."
+      );
       const coach = localCoachReply(transcript, turns, pronunciation);
 
       response.json({
@@ -2612,7 +2652,14 @@ app.post("/api/voice/turn", uploadSingleAudio, async (request, response) => {
 
     const coach = getCoachReplyFromAssessment(pronunciation) || await createCoachReply({ instructions, learnerText: transcript, turns, pronunciation });
     const audioUrl = await createCoachAudioUrl({ request, reply: coach.reply });
-    const { coachReply, coachSupportText, ...pronunciationForClient } = pronunciation;
+    const { coachReply, coachSupportText, ...rawPronunciationForClient } = pronunciation;
+    const pronunciationForClient = hasKnownTarget
+      ? rawPronunciationForClient
+      : markPronunciationUnscored(
+          rawPronunciationForClient,
+          "free-chat-no-target",
+          "Free chat does not use a target sentence, so this turn has no pronunciation score."
+        );
     console.log("[voice/turn] completed", {
       ms: Date.now() - startedAt,
       hasAudio: Boolean(audioUrl),
@@ -2629,6 +2676,7 @@ app.post("/api/voice/turn", uploadSingleAudio, async (request, response) => {
         ...pronunciationForClient,
         transcript,
         expectedText,
+        targetSource,
         isDemo: pronunciation.scoringMode !== "audio",
       },
       isDemo: Boolean(coach.isDemo),

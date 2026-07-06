@@ -9,6 +9,15 @@ export type LessonAttempt = {
   checkedCount: number;
   retryCount: number;
   reviewPrompts: string[];
+  activityResults?: LessonActivityAttemptResult[];
+};
+
+export type LessonActivityAttemptResult = {
+  activityIndex: number;
+  activityType: string;
+  correct: boolean;
+  score?: number;
+  reviewPrompt?: string;
 };
 
 export type ReviewQueueItem = {

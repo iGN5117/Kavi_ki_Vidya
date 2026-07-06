@@ -1,4 +1,5 @@
 import type { SpeakingFeedback } from "@/src/types/speaking";
+import { isPronunciationClear, normalizePronunciationScore } from "@/shared/scoringPolicy";
 import type { ConversationTurn } from "@/src/types/speaking";
 
 export const sampleFeedback: SpeakingFeedback = {
@@ -208,7 +209,7 @@ function getPronunciationChecks(turns: ConversationTurn[]) {
     .map((turn) => turn.pronunciation!)
     .map((pronunciation) => ({
       ...pronunciation,
-      score: Math.max(0, Math.min(100, pronunciation.score <= 1 ? pronunciation.score * 100 : pronunciation.score)),
+      score: normalizePronunciationScore(pronunciation.score) ?? 0,
     }));
 }
 
@@ -218,7 +219,7 @@ function getAverageScore(scores: number[]) {
 }
 
 function cleanFeedbackLists(feedback: SpeakingFeedback, lastUserText: string, improved: string, score?: number) {
-  const hasClearPronunciation = typeof score === "number" && score >= 85;
+  const hasClearPronunciation = isPronunciationClear(score);
   const retryWords = hasClearPronunciation
     ? []
     : feedback.pronunciation.retryWords.filter((word) => isUsefulSavedPhrase(word) || getWordCount(word) === 1);
@@ -251,7 +252,7 @@ export function personalizeFeedbackWithTurnPronunciation(
   const checks = getPronunciationChecks(turns);
   const latestCheck = checks.at(-1);
   const pronunciationScore = getAverageScore(checks.map((check) => check.score));
-  const hasClearPronunciation = typeof pronunciationScore === "number" && pronunciationScore >= 85;
+  const hasClearPronunciation = isPronunciationClear(pronunciationScore);
   const cleanedLists = cleanFeedbackLists(feedback, lastUserText, improved, pronunciationScore);
   const hasGrammarCorrection = hasFeedbackCorrection || hasLocalCorrection;
   const improvedSentences = hasFeedbackCorrection
@@ -265,7 +266,7 @@ export function personalizeFeedbackWithTurnPronunciation(
     pronunciation: {
       ...feedback.pronunciation,
       summary: latestCheck?.summary ?? feedback.pronunciation.summary,
-      ...(pronunciationScore === undefined ? {} : { score: pronunciationScore }),
+      ...(typeof pronunciationScore === "number" ? { score: pronunciationScore } : { score: undefined }),
       retryWords: latestCheck
         ? hasClearPronunciation
           ? []
@@ -301,7 +302,6 @@ export function buildLocalFeedback(turns: ConversationTurn[]): SpeakingFeedback 
       summary: hasLearnerSpeech
         ? `Feedback is based on your last spoken sentence: "${lastUserText}". Practice slowly and keep each word separate.`
         : "No spoken learner sentence was captured in this session yet.",
-      score: hasLearnerSpeech ? Math.min(92, 68 + userTexts.length * 4) : undefined,
       retryWords,
       tips: hasLearnerSpeech
         ? isTinyGreeting
@@ -330,7 +330,6 @@ export function buildLocalFeedback(turns: ConversationTurn[]): SpeakingFeedback 
           ? "Next, try one full sentence about your day."
           : `Repeat this once more: "${improved}"`
         : "Say one full sentence in the speaking tab.",
-      score: hasLearnerSpeech && !isTinyGreeting ? Math.min(94, 66 + userTexts.length * 6) : undefined,
     },
     savedPhrases: hasLearnerSpeech ? getSavedPhrases(userTexts, improved) : [],
     mistakes: getRememberItems(lastUserText, improved),

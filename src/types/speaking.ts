@@ -8,7 +8,10 @@ export type PronunciationCheckResult = {
   transcript: string;
   expectedText: string;
   modelSentence?: string;
-  score: number;
+  score?: number;
+  scoreStatus?: "scored" | "unscored";
+  scoreReason?: string;
+  targetSource?: "provided-target" | "transcript-target";
   scoringMode?: "audio" | "transcript";
   audioScore?: number;
   transcriptScore?: number;

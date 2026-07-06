@@ -4,6 +4,7 @@ import { getLocalizedSupportLines, getPronunciationSupport } from "@/src/service
 import { colors, radii, spacing } from "@/src/theme/theme";
 import type { ExplanationPreference } from "@/src/types/content";
 import type { ConversationTurn } from "@/src/types/speaking";
+import { normalizePronunciationScore } from "@/shared/scoringPolicy";
 
 type ConversationBubbleProps = {
   turn: ConversationTurn;
@@ -19,6 +20,7 @@ export function ConversationBubble({ turn, preference, onReplayAudio, testID }: 
   const modelSentence = turn.pronunciation ? getModelSentence(turn.pronunciation) : undefined;
   const pronunciationTips = turn.pronunciation?.tips?.filter(Boolean).slice(0, 3) ?? [];
   const focusItems = getFocusItems(turn.pronunciation);
+  const pronunciationScore = normalizePronunciationScore(turn.pronunciation?.score);
   const supportLines = getLocalizedSupportLines(turn.support, preference, turn.supportText);
   const pronunciationSupportLines = turn.pronunciation
     ? getLocalizedSupportLines(getPronunciationSupport(turn.pronunciation), preference)
@@ -52,14 +54,20 @@ export function ConversationBubble({ turn, preference, onReplayAudio, testID }: 
             <View style={styles.assessmentHeading}>
               <Text style={styles.assessmentTitle}>Pronunciation</Text>
               <Text style={styles.assessmentMeta}>
-                {getVerdictLabel(turn.pronunciation.verdict)} - {turn.pronunciation.scoringMode === "audio" ? "Audio score" : "Transcript score"}
+                {getVerdictLabel(turn.pronunciation.verdict)} - {typeof pronunciationScore === "number" ? (turn.pronunciation.scoringMode === "audio" ? "Audio score" : "Word score") : "No score"}
               </Text>
             </View>
-            <Text style={styles.pronunciationScore}>{Math.round(turn.pronunciation.score)}%</Text>
+            {typeof pronunciationScore === "number" ? (
+              <Text style={styles.pronunciationScore}>{Math.round(pronunciationScore)}%</Text>
+            ) : (
+              <Text style={styles.pronunciationScore}>No score</Text>
+            )}
           </View>
-          <View style={styles.scoreTrack}>
-            <View style={[styles.scoreFill, { width: `${Math.max(6, Math.min(100, Math.round(turn.pronunciation.score)))}%` }]} />
-          </View>
+          {typeof pronunciationScore === "number" ? (
+            <View style={styles.scoreTrack}>
+              <View style={[styles.scoreFill, { width: `${Math.max(6, Math.min(100, Math.round(pronunciationScore)))}%` }]} />
+            </View>
+          ) : null}
           {modelSentence ? (
             <View style={styles.modelSentenceBlock}>
               <Text style={styles.modelSentenceLabel}>Better way</Text>
