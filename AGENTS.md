@@ -1,40 +1,16 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-07-05 7:54pm EDT
+# [English_Learning_App_Codex] recent context, 2026-07-06 12:04am EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (20,366t read) | 1,224,642t work | 98% savings
+Stats: 50 obs (23,746t read) | 1,050,482t work | 98% savings
 
-### May 3, 2026
-29 11:41a 🔵 sanitizeCoachReply Confirmed: sanitizeSupportText Applied Only to Parsed Path, Not Fallback
-30 " 🔄 sanitizeCoachReply: Reply Extracted to Variable Before sanitizeSupportText Call
-31 " ✅ Server Restarted with Full supportText Sanitization Pipeline
-32 " 🔵 sanitizeSupportText Allows Matched Continuations When Both reply and supportText Have Questions
-33 11:42a 🔵 Grammar Fix Pipelines Exist in Both Client and Server with Parallel Rules
-34 11:50a 🟣 applyCommonLocalGrammarFixes Extended with Missing "To Be" Verb Rules
-35 " 🟣 Missing "To Be" Verb Fix Ported to Client and Grammar Explanation Added
-36 " 🟣 addedBeVerb Grammar Explanation Ported to Client-Side getGrammarExplanation
-37 " 🔵 Grammar Fix Unit Test: he/she/it Rule Not Covered in Inline Test, Potential False Positive
-38 " 🟣 Missing Copula Verb Fix Confirmed End-to-End in Text Turn and Feedback Session
-39 " 🟣 Voice Turn E2E Confirmed: Coach Narrates "I am good." Not "I good." on Grammar Retry
-### Jun 6, 2026
-186 11:57p 🟣 Android UI Automated Testing Infrastructure via Maestro
-187 " 🟣 EAS Android APK Build Triggered (Preview Profile)
-188 " 🔴 Session Review Screen Showed Hardcoded/Mismatched Data
-189 " ⚖️ Live Talk Feature Paused Until Physical Device Available
-190 " ⚖️ Supabase Selected as Production Backend; OAuth Removed
-191 " 🔴 Multiple Android-Specific UI Bugs Fixed
-192 " 🟣 LLM Cost Optimization: Combined Reply and Support Text into Single API Call
 ### Jun 16, 2026
 338 9:09a 🟣 50+ Expanded Lessons Added via expandedCurriculum.ts
-339 " 🟣 Differentiated Pronunciation Scoring Thresholds for Known vs Free-Chat Targets
-340 " 🟣 ConversationBubble Shows Pronunciation Focus Items and Tips
-341 " 🟣 Voice Turn Regression Tests Extended with knownTarget Flag Assertions
-342 " 🔵 Dev Server Only Reachable from Within verify Script Process, Not from Shell curl/node
 ### Jul 2, 2026
 807 11:06p 🔵 Backend Architecture: Render API + Supabase Split
 ### Jul 5, 2026
@@ -68,8 +44,30 @@ S162 Speak tab per-sentence scoring design — full architecture proposal for pr
 873 " 🔵 Score Normalization Bug and Fabricated Fallback Scores Confirmed in Multiple Files
 874 6:34p 🔵 Security and Infrastructure Bugs Confirmed: Unauthenticated OpenAI Endpoints and Single Sync Profile
 875 " 🔵 Feedback Evaluation Complete: All Three Reviews Verified Accurate Against Codebase
+876 7:54p ⚖️ Implementation Plan Created to Fix Scoring Bugs from Feedback Review
+877 " 🔵 Type System Map: Core Scoring Types All Live in progressSync.ts
+878 " 🔵 Score Normalization Bug Confirmed in FeedbackSummary.tsx — 5th Site Found
+879 7:56p 🔴 Step 2 Started: shared/scoringPolicy.js Created as Shared Scoring Contract
+880 " 🔴 Type System Extended: PronunciationCheckResult.score Made Optional; LessonActivityAttemptResult Added
+881 7:57p 🔴 Server Now Uses Shared Thresholds: localPronunciationCheck and needsPronunciationRetry Wired to scoringPolicy
+882 " 🔴 Patch Application Failed: personalizeFeedbackWithTurnPronunciation Block Already Modified
+883 " 🔴 Second Patch Failure: formatPronunciationContext Return Block Does Not Match Expected Lines
+884 " 🔵 parseTurnPronunciation at Line 806: Returns undefined When score is Missing — Blocks Unscored Turn Data
+885 " 🔵 Circular Free-Chat Scoring Confirmed at Line 2620: expectedText Falls Back to transcript
+886 7:58p 🔴 Step 4 Complete on Server: Free-Chat Circular Scoring and Demo Contamination Fixed
+887 " 🔵 localFeedback Function Already Updated: isPronunciationClear Wired, Score Emission Uses typeof Guard
+888 " 🔴 Client-Side Score Normalization Fixed: sampleFeedback.ts and sessionReceipt.ts Updated
+889 7:59p 🔴 Score Normalization Bug Fixed in All 5 Client Display Sites: FeedbackSummary.tsx and ConversationBubble.tsx Updated
+890 " 🔴 Step 5 In Progress: createRealtimeSession Import Removed and withTimeout Helper Deleted from conversation.tsx
+891 " 🔴 Steps 4+5 Complete on Client: Throwaway Realtime Call Removed, buildDrillResult Fixed, Free-Chat Scoring Gated
+892 " 🔴 practicePlan.ts and useAppStore.ts Updated: Drill Focus Logic Fixed, Review Schedule Simplified, activityResults Wired
+893 8:00p 🔴 getReviewSchedule Function Deleted from useAppStore.ts
+894 " 🔴 Step 3 Complete: Learn Tab Scoring Rewritten to First-Attempt Per-Activity Model
+895 " 🔴 Patch Target Mismatch: Component is Named PronunciationPractice Not PronunciationPracticeBlock
+896 8:01p 🔴 render.yaml Threshold Values Aligned with Shared Policy; PronunciationPractice Score Display Fixed
+897 " 🔵 Threshold Sweep: 2 Remaining Hardcoded Scoring Values Found; render.yaml has 2 Unexpanded 86s
 
-Access 1225k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 1050k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify
