@@ -63,6 +63,21 @@ final class KaviLiveAudio: RCTEventEmitter {
     }
   }
 
+  @objc(routeToSpeaker:rejecter:)
+  func routeToSpeaker(_ resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
+    audioQueue.async {
+      do {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetooth])
+        try session.setActive(true)
+        try session.overrideOutputAudioPort(.speaker)
+        resolve(["routed": true])
+      } catch {
+        reject("live_audio_speaker_route_failed", error.localizedDescription, error)
+      }
+    }
+  }
+
   @objc(playPcmChunk:resolver:rejecter:)
   func playPcmChunk(_ base64Audio: NSString, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) {
     audioQueue.async {

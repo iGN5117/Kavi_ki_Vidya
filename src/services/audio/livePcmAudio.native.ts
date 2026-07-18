@@ -3,6 +3,7 @@ import { NativeEventEmitter, NativeModules, Platform, type EmitterSubscription }
 type KaviLiveAudioNativeModule = {
   start: (options: { sampleRate: number; bufferSize: number }) => Promise<{ sampleRate: number; isCapturing: boolean }>;
   stopCapture: () => Promise<{ isCapturing: boolean }>;
+  routeToSpeaker?: () => Promise<{ routed: boolean }>;
   playPcmChunk: (base64Audio: string) => Promise<{ queued: boolean }>;
   clearPlayback: () => Promise<{ cleared: boolean }>;
   stop: () => Promise<{ isCapturing: boolean }>;
@@ -66,6 +67,11 @@ export async function startLivePcmAudioCapture() {
 export async function stopLivePcmAudioCapture() {
   if (!nativeModule) return;
   await nativeModule.stopCapture();
+}
+
+export async function routeLiveAudioToSpeaker() {
+  if (!nativeModule?.routeToSpeaker) return;
+  await nativeModule.routeToSpeaker();
 }
 
 export async function playLivePcmAudioChunk(base64Audio: string) {

@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { mediaDevices, RTCPeerConnection, registerGlobals } from "react-native-webrtc";
+import { routeLiveAudioToSpeaker } from "@/src/services/audio/livePcmAudio";
 import { createRealtimeWebRtcAnswer } from "@/src/services/realtime/realtimeClient";
 import type { LiveRealtimeEvent, LiveWebRtcConnection, LiveWebRtcOptions } from "./liveWebRtc";
 
@@ -14,6 +15,11 @@ export async function connectLiveWebRtc({ instructions, onEvent }: LiveWebRtcOpt
   }
 
   const peer = new RTCPeerConnection() as any;
+  const routeToSpeaker = () => {
+    void routeLiveAudioToSpeaker().catch((error) => {
+      console.warn("[kavi-live] could not route Realtime audio to the phone speaker", error);
+    });
+  };
   const stream = await mediaDevices.getUserMedia({
     audio: {
       echoCancellation: true,
@@ -28,6 +34,7 @@ export async function connectLiveWebRtc({ instructions, onEvent }: LiveWebRtcOpt
     event.streams[0]?.getAudioTracks().forEach((track: any) => {
       track.enabled = true;
     });
+    routeToSpeaker();
   });
 
   const channel = peer.createDataChannel("oai-events") as any;
@@ -48,6 +55,7 @@ export async function connectLiveWebRtc({ instructions, onEvent }: LiveWebRtcOpt
   const localDescription = peer.localDescription || offer;
   const answerSdp = await createRealtimeWebRtcAnswer(localDescription.sdp || "", instructions);
   await peer.setRemoteDescription({ type: "answer", sdp: answerSdp });
+  routeToSpeaker();
   await channelOpen;
 
   return {

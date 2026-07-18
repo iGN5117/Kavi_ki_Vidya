@@ -215,14 +215,26 @@ function verifyLiveRealtimeReady() {
   const clientEntrypoint = existsFile("app/(tabs)/speak/index.tsx") ? readText(path.join(repoRoot, "app/(tabs)/speak/index.tsx")) : "";
   const liveScreen = existsFile("app/(tabs)/speak/live.tsx") ? readText(path.join(repoRoot, "app/(tabs)/speak/live.tsx")) : "";
   const liveServer = existsFile("server/dev-server.js") ? readText(path.join(repoRoot, "server/dev-server.js")) : "";
+  const livePrompt = existsFile("src/services/realtime/sessionConfig.ts") ? readText(path.join(repoRoot, "src/services/realtime/sessionConfig.ts")) : "";
+  const liveWebRtc = existsFile("src/services/realtime/liveWebRtc.native.ts") ? readText(path.join(repoRoot, "src/services/realtime/liveWebRtc.native.ts")) : "";
+  const liveAudioModule = existsFile("ios/KavikiVidya/KaviLiveAudio.swift") ? readText(path.join(repoRoot, "ios/KavikiVidya/KaviLiveAudio.swift")) : "";
 
   const mentionsRealtime = appJsonText.includes("react-native-webrtc") || envExampleNames.has("EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT");
   if (!mentionsRealtime) addFailure("Live conversation requires react-native-webrtc and EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT configuration.");
   if (!clientEntrypoint.includes('router.push("/speak/live")')) addFailure("Speak home must expose Live conversation.");
   if (!liveScreen.includes("connectLiveWebRtc") || !liveScreen.includes("connectLiveWebSocket")) addFailure("Live screen must support the Realtime voice transports.");
   if (!liveServer.includes("/v1/realtime/calls") || !liveServer.includes("gpt-realtime-2.1")) addFailure("Live server must use the current Realtime WebRTC call flow.");
+  if (!livePrompt.includes("Treat Indian English as a valid English accent.") || !livePrompt.includes("Do not correct every turn.")) {
+    addFailure("Live conversation must preserve Indian English while using selective, gentle coaching.");
+  }
+  if (!livePrompt.includes("Speak slightly slower than an average casual conversation")) {
+    addFailure("Live conversation must guide the Realtime coach to speak at an unhurried pace.");
+  }
+  if (!liveScreen.includes("shouldRouteThroughEarpiece: false") || !liveWebRtc.includes("routeLiveAudioToSpeaker") || !liveAudioModule.includes("overrideOutputAudioPort(.speaker)")) {
+    addFailure("Live conversation must route coach audio to the phone speaker instead of the call earpiece.");
+  }
 
-  if (mentionsRealtime && clientEntrypoint.includes('router.push("/speak/live")') && liveScreen.includes("connectLiveWebRtc") && liveScreen.includes("connectLiveWebSocket") && liveServer.includes("/v1/realtime/calls") && liveServer.includes("gpt-realtime-2.1")) {
+  if (mentionsRealtime && clientEntrypoint.includes('router.push("/speak/live")') && liveScreen.includes("connectLiveWebRtc") && liveScreen.includes("connectLiveWebSocket") && liveServer.includes("/v1/realtime/calls") && liveServer.includes("gpt-realtime-2.1") && livePrompt.includes("Treat Indian English as a valid English accent.") && livePrompt.includes("Do not correct every turn.") && livePrompt.includes("Speak slightly slower than an average casual conversation") && liveScreen.includes("shouldRouteThroughEarpiece: false") && liveWebRtc.includes("routeLiveAudioToSpeaker") && liveAudioModule.includes("overrideOutputAudioPort(.speaker)")) {
     addPass("Live conversation is a production voice-practice path with Realtime WebRTC and simulator fallback.");
   }
 }

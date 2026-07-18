@@ -1,37 +1,20 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-07-17 10:31pm EDT
+# [English_Learning_App_Codex] recent context, 2026-07-17 10:57pm EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (26,608t read) | 1,156,735t work | 98% savings
+Stats: 50 obs (26,424t read) | 1,114,273t work | 98% savings
 
 ### Jul 5, 2026
-855 2:54p 🔵 Server Pronunciation Demo Mode Bug — Self-Comparison Always Returns 100%
-856 " 🔵 Scattered and Inconsistent Pronunciation Score Thresholds Across Codebase
-860 2:55p 🔵 Product Requirements — Target User and Prototype Scope Constraints Documented
-861 " 🔵 Theme System — Warm Indian-Aesthetic Color Palette, No Dark Mode
-862 2:56p 🟣 Product Manager Review Document Created — Comprehensive Scoring Analysis
-863 " 🟣 CTO Technical Review Document Created — 14 Bugs and Design Flaws Catalogued
 S161 Speak tab per-sentence scoring redesign — user wants pronunciation, grammar, and intelligibility scoring with balanced difficulty (Jul 5 at 2:56 PM)
 S159 Multi-perspective code review of "Kavi ki Vidya" English learning app — PM, CTO, and Design Expert reviews focused on Learn and Speak tab scoring effectiveness (Jul 5 at 2:56 PM)
-864 2:58p ⚖️ Speak Tab Scoring Design Requirements Defined
 S160 Speak tab scoring redesign — user wants per-sentence scoring of pronunciation, grammar, and intelligibility with balanced difficulty (Jul 5 at 2:59 PM)
 S162 Speak tab per-sentence scoring design — full architecture proposal for pronunciation, grammar, and intelligibility with balanced calibration (Jul 5 at 3:05 PM)
-865 3:06p 🔵 Audio Assessment Prompt Architecture — Grammar Explicitly Excluded from Per-Turn Scoring
-866 6:31p 🟣 Credit Card Image Edit — Expiry Date Added
-867 6:32p 🔵 claude_feedback Folder Contains Three Review Documents
-868 " 🔵 Product Review: Scoring System Fundamentally Broken in Learn and Speak Tabs
-869 " 🔵 CTO Technical Review: 15+ Bugs Catalogued Across Scoring, Auth, and Cost
-870 " 🔵 Design Review: Typography, UI Copy Jargon, and Per-Turn Score Cards Are Top Issues
-871 6:33p 🔵 Code Verification Confirms All Major Scoring Bugs from Feedback Reviews
-872 " 🔵 Design Bugs Fully Confirmed: 123 fontWeight-900 Instances, Jargon in UI, End Session Icon-Only
-873 " 🔵 Score Normalization Bug and Fabricated Fallback Scores Confirmed in Multiple Files
-874 6:34p 🔵 Security and Infrastructure Bugs Confirmed: Unauthenticated OpenAI Endpoints and Single Sync Profile
-875 " 🔵 Feedback Evaluation Complete: All Three Reviews Verified Accurate Against Codebase
+875 6:34p 🔵 Feedback Evaluation Complete: All Three Reviews Verified Accurate Against Codebase
 876 7:54p ⚖️ Implementation Plan Created to Fix Scoring Bugs from Feedback Review
 877 " 🔵 Type System Map: Core Scoring Types All Live in progressSync.ts
 878 " 🔵 Score Normalization Bug Confirmed in FeedbackSummary.tsx — 5th Site Found
@@ -65,8 +48,25 @@ S162 Speak tab per-sentence scoring design — full architecture proposal for pr
 1005 10:27p ✅ Live Voice Upgrades Applied and Verified: semantic_vad, gpt-realtime-2.1, marin voice, client_secrets API, hands-free UX
 1007 10:29p 🟣 Live Conversation Upgraded to OpenAI Realtime API v2 with Semantic VAD
 1008 " 🔴 Native WebRTC Microphone Muting Was a No-Op — Now Correctly Toggles Track
+1010 10:36p 🔵 Android Audio Format Investigation Requested — Speak Tab Had Prior Android-Specific Changes
+1011 " 🔵 Android Audio Pipeline Mapped: M4A/AAC Recording → ffmpeg Conversion → WAV Assessment → Server-Side MIME Detection
+1013 10:37p 🔵 Android Audio Pipeline Deep Audit Complete: All Key Functions Confirmed Intact
+1015 " 🟣 Live Mode Persona Updated for Indian English Learner Context
+1012 10:38p 🔵 Android Audio Pipeline: MPEG-4/AAC Recording with Server-Side WAV Conversion
+1014 10:39p 🔵 Android Audio Smoke Test PASSED: M4A/AAC → ffmpeg WAV → Pronunciation Assessment Returns score with scoringMode "audio"
+1016 10:40p 🔵 Android AAC/M4A Audio Successfully Scored by Pronunciation API
+1017 " 🔵 Android Verification Script Requires Running Emulator — Cannot Run in CI Without Device
+1018 " 🔵 Existing buildRealtimeInstructions Persona: Indian Homemaker English Coach
+1019 " 🟣 New buildLiveRealtimeInstructions() and withLiveConversationInstructions() for Natural Live Mode
+1020 10:43p 🟣 Production Readiness Check Now Gates on Indian English Accent Policy
+1021 " ✅ Base buildRealtimeInstructions Softened to Remove Rigid Per-Turn Formula
+1023 " 🔵 Live Realtime Persona Smoke Test Confirms Gentle Grammar Recast Behavior
+1022 10:44p ⚖️ Live Mode Coach Persona: Indian English-Aware with Gentle Grammar Recasting
+1024 " ✅ Knowledge Graph Updated After Live Mode Persona Changes
+1025 10:45p 🔵 withTeachingStructureInstructions Retained for Non-Live Paths; Only Realtime Session Paths Use New Live Rules
+1026 " ✅ Live Mode Voice Feedback: Indian Voice, Slower Speed, Speaker Routing Fix Requested
 
-Access 1157k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 1114k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify

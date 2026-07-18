@@ -981,6 +981,13 @@ Every coach reply must follow this exact teaching structure:
 Ask the learner to repeat the same sentence only when pronunciation or grammar context says another attempt is needed. If pronunciation is clear, continue the conversation with a related next question instead of asking for the same sentence again.`;
 }
 
+function withLiveConversationInstructions(instructions) {
+  return `${instructions}
+
+# Live Turn Rules
+Keep the exchange conversational, not formulaic. Do not require an acknowledgement, Hinglish support line, correction, or follow-up question in every reply. Follow the learner's pace and correct only one clear, useful point at a time.`;
+}
+
 function getRealtimeAudioRate(value, fallback = 24000) {
   const rate = Number(value);
   return [24000, 48000].includes(rate) ? rate : fallback;
@@ -1003,7 +1010,7 @@ function createRealtimeSessionConfig(instructions, options = {}) {
     type: "realtime",
     model: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1",
     output_modalities: ["audio"],
-    instructions: withTeachingStructureInstructions(instructions),
+    instructions: withLiveConversationInstructions(instructions),
     audio: {
       input: {
         format: {
@@ -1039,7 +1046,7 @@ function createRealtimeInstructionsUpdate(instructions) {
     type: "session.update",
     session: {
       type: "realtime",
-      instructions: withTeachingStructureInstructions(instructions),
+      instructions: withLiveConversationInstructions(instructions),
     },
   };
 }

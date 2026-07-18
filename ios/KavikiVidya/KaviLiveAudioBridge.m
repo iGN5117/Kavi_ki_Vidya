@@ -10,6 +10,9 @@ RCT_EXTERN_METHOD(start:(NSDictionary *)options
 RCT_EXTERN_METHOD(stopCapture:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)
 
+RCT_EXTERN_METHOD(routeToSpeaker:(RCTPromiseResolveBlock)resolve
+                  rejecter:(RCTPromiseRejectBlock)reject)
+
 RCT_EXTERN_METHOD(playPcmChunk:(NSString *)base64Audio
                   resolver:(RCTPromiseResolveBlock)resolve
                   rejecter:(RCTPromiseRejectBlock)reject)

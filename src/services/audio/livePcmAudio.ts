@@ -22,6 +22,10 @@ export async function stopLivePcmAudioCapture() {
   return undefined;
 }
 
+export async function routeLiveAudioToSpeaker() {
+  return undefined;
+}
+
 export async function playLivePcmAudioChunk(_base64Audio: string) {
   return undefined;
 }

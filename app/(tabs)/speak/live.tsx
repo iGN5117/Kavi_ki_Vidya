@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import { setAudioModeAsync } from "expo-audio";
 import { router, useLocalSearchParams } from "expo-router";
 import { Mic, MicOff, PhoneOff, Radio } from "lucide-react-native";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +19,7 @@ import {
 import { connectLiveWebRtc } from "@/src/services/realtime/liveWebRtc";
 import type { LiveWebRtcConnection } from "@/src/services/realtime/liveWebRtc";
 import { connectLiveWebSocket } from "@/src/services/realtime/liveWebSocket";
-import { buildRealtimeInstructions } from "@/src/services/realtime/sessionConfig";
+import { buildLiveRealtimeInstructions } from "@/src/services/realtime/sessionConfig";
 import { colors, radii, spacing } from "@/src/theme/theme";
 
 type LiveState = "idle" | "connecting" | "live" | "error";
@@ -33,7 +34,7 @@ export default function LiveConversationScreen() {
   const isIosSimulator = Platform.OS === "ios" && !Constants.isDevice;
   const simulatorUnsupportedMessage =
     "iOS Simulator uses native PCM audio streaming through the local Realtime WebSocket bridge because native WebRTC audio crashes Simulator CoreAudio.";
-  const instructions = useMemo(() => buildRealtimeInstructions("free"), []);
+  const instructions = useMemo(() => buildLiveRealtimeInstructions(), []);
   const connectionRef = useRef<LiveWebRtcConnection | null>(null);
   const liveAudioSubscriptionsRef = useRef<EmitterSubscription[]>([]);
   const autoStartedRef = useRef(false);
@@ -400,6 +401,12 @@ export default function LiveConversationScreen() {
 
       setLiveState("connecting");
       addLog("system", "Opening live voice connection...");
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
+        shouldRouteThroughEarpiece: false,
+        interruptionMode: "doNotMix",
+      });
       const connection = isIosSimulator
         ? await connectLiveWebSocket({
             instructions,
@@ -411,6 +418,9 @@ export default function LiveConversationScreen() {
             onEvent: handleRealtimeEvent,
           });
       connectionRef.current = connection;
+      if (Platform.OS === "android") {
+        await setAudioModeAsync({ shouldRouteThroughEarpiece: false });
+      }
       if (isIosSimulator) {
         attachLivePcmListeners();
       }
