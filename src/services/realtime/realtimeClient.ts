@@ -310,7 +310,9 @@ export async function createRealtimeWebRtcAnswer(sdp: string, instructions: stri
     method: "POST",
     headers: {
       "Content-Type": "application/sdp",
-      "X-Kavi-Instructions": instructions,
+      // Android rejects line breaks in HTTP header values. The live coaching
+      // prompt is multi-line, so encode it before sending it to our server.
+      "X-Kavi-Instructions": encodeURIComponent(instructions),
     },
     body: sdp,
   });

@@ -2616,7 +2616,15 @@ app.post("/api/realtime/call", express.text({ type: ["application/sdp", "text/pl
     const rawInstructions = Array.isArray(request.headers["x-kavi-instructions"])
       ? request.headers["x-kavi-instructions"][0]
       : request.headers["x-kavi-instructions"];
-    const instructions = clampText(rawInstructions, "You are a supportive English speaking coach.", 3500);
+    let decodedInstructions = rawInstructions;
+    if (typeof rawInstructions === "string") {
+      try {
+        decodedInstructions = decodeURIComponent(rawInstructions);
+      } catch {
+        // Keep supporting older clients that sent plain-text instructions.
+      }
+    }
+    const instructions = clampText(decodedInstructions, "You are a supportive English speaking coach.", 3500);
     const fd = new FormData();
     fd.set("sdp", offerSdp);
     fd.set(
