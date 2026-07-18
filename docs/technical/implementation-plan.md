@@ -17,7 +17,7 @@ The first implementation will use:
 - Expo React Native for one shared iOS/Android app.
 - Expo Router for onboarding, protected app routes, tabs, and detail screens.
 - OpenAI as the primary AI provider.
-- OpenAI Realtime API with `gpt-realtime` for live speaking sessions.
+- OpenAI Realtime API with `gpt-realtime-2.1` for live speaking sessions.
 - A tiny local/server endpoint to mint ephemeral OpenAI Realtime credentials.
 - Local-only persistence for prototype progress, streaks, preferences, saved phrases, and session summaries.
 - A small consistent Indian woman coach avatar set with neutral, listening, speaking, encouraging, and thinking states.
@@ -29,7 +29,7 @@ The first implementation will use:
 - Persistence: Supabase-backed progress storage through the backend API.
 - Voice/AI: real voice pipeline from the beginning.
 - AI provider: OpenAI.
-- Voice model: OpenAI Realtime API using `gpt-realtime`.
+- Voice model: OpenAI Realtime API using `gpt-realtime-2.1`.
 - Feedback: structured end-session feedback generated from the speaking session.
 - API key handling: permanent OpenAI keys must never be stored in the mobile app.
 - Persistence: local-only prototype storage.

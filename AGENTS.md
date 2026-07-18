@@ -1,29 +1,17 @@
 <claude-mem-context>
 # Memory Context
 
-# [English_Learning_App_Codex] recent context, 2026-07-06 12:04am EDT
+# [English_Learning_App_Codex] recent context, 2026-07-17 10:31pm EDT
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision 🚨security_alert 🔐security_note
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (23,746t read) | 1,050,482t work | 98% savings
+Stats: 50 obs (26,608t read) | 1,156,735t work | 98% savings
 
-### Jun 16, 2026
-338 9:09a 🟣 50+ Expanded Lessons Added via expandedCurriculum.ts
-### Jul 2, 2026
-807 11:06p 🔵 Backend Architecture: Render API + Supabase Split
 ### Jul 5, 2026
-850 2:52p ✅ English Learning App Multi-Perspective Review Initiated
-851 " 🔵 English Learning App Codebase Structure Mapped
-852 2:53p 🔵 Learn Tab Scoring Implementation — Key Bugs and Design Flaws Identified
-853 " 🔵 Speak Tab Scoring — Drill Results Only, Free Sessions Unscored, Server Dependency Risk
-854 " 🔵 realtimeClient.ts — Server Dependency for All AI Features Including Pronunciation
 855 2:54p 🔵 Server Pronunciation Demo Mode Bug — Self-Comparison Always Returns 100%
 856 " 🔵 Scattered and Inconsistent Pronunciation Score Thresholds Across Codebase
-857 " 🔵 Fake Confidence Score in Fallback Feedback — Linear Formula Not Based on Actual Performance
-858 " 🔵 Score-to-Pronunciation Range Normalization Bug — Scores 0–1 Handled Inconsistently
-859 " 🔵 Zustand Store — Review Queue Scheduling Tied Directly to Lesson Score
 860 2:55p 🔵 Product Requirements — Target User and Prototype Scope Constraints Documented
 861 " 🔵 Theme System — Warm Indian-Aesthetic Color Palette, No Dark Mode
 862 2:56p 🟣 Product Manager Review Document Created — Comprehensive Scoring Analysis
@@ -66,8 +54,19 @@ S162 Speak tab per-sentence scoring design — full architecture proposal for pr
 895 " 🔴 Patch Target Mismatch: Component is Named PronunciationPractice Not PronunciationPracticeBlock
 896 8:01p 🔴 render.yaml Threshold Values Aligned with Shared Policy; PronunciationPractice Score Display Fixed
 897 " 🔵 Threshold Sweep: 2 Remaining Hardcoded Scoring Values Found; render.yaml has 2 Unexpanded 86s
+### Jul 17, 2026
+995 10:20p 🔵 ChatGPT Live Integration Inquiry — OpenAI Docs MCP Tools Confirmed Available
+996 " 🔵 English Learning App Already Has Realtime Voice Infrastructure — ChatGPT Live Maps to OpenAI Realtime API
+998 " 🔵 Complete Frontend Realtime Service Layer Mapped — WebRTC Disabled on iOS Simulator, Model String May Need Upgrade
+997 10:21p 🔵 Full OpenAI Realtime API Integration Already Exists in English Learning App (Both WebRTC and WebSocket)
+1002 10:22p 🔵 app/(tabs)/speak/live.tsx — Complete Live Conversation Screen with Dual Transport Strategy Already Implemented
+1003 " 🔵 In-Progress Working Tree — Curriculum Content Feature Being Added Independently of Live Voice
+1004 10:26p 🔵 OpenAI Realtime API Spec Confirms: Official Curl Example Uses "gpt-realtime" Alias; Semantic VAD is New; Session Config Nested Under session.audio.input
+1005 10:27p ✅ Live Voice Upgrades Applied and Verified: semantic_vad, gpt-realtime-2.1, marin voice, client_secrets API, hands-free UX
+1007 10:29p 🟣 Live Conversation Upgraded to OpenAI Realtime API v2 with Semantic VAD
+1008 " 🔴 Native WebRTC Microphone Muting Was a No-Op — Now Correctly Toggles Track
 
-Access 1050k tokens of past work via get_observations([IDs]) or mem-search skill.
+Access 1157k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>
 
 ## graphify

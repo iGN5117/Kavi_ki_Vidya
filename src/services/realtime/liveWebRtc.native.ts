@@ -63,10 +63,9 @@ export async function connectLiveWebRtc({ instructions, onEvent }: LiveWebRtcOpt
       }
     },
     setMuted: (muted) => {
-      // Avoid toggling native iOS audio tracks during an active WebRTC call.
-      // On simulator this can deadlock CoreAudio. The live screen gates turns
-      // through Realtime buffer clear/commit instead.
-      void muted;
+      stream.getAudioTracks().forEach((track: any) => {
+        track.enabled = !muted;
+      });
     },
   };
 }

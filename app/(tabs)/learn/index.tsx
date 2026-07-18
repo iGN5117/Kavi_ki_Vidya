@@ -6,9 +6,8 @@ import { LessonCard } from "@/src/components/LessonCard";
 import { PrimaryActionButton } from "@/src/components/PrimaryActionButton";
 import { Screen } from "@/src/components/Screen";
 import { StreakProgress } from "@/src/components/StreakProgress";
-import { formatLessonSkillTag, getLessonSkillTags } from "@/src/content/lessonSkillProfiles";
-import { lessons } from "@/src/content/lessons";
-import { modules } from "@/src/content/modules";
+import { formatLessonSkillTag } from "@/src/content/lessonSkillProfiles";
+import { useCurriculumContent } from "@/src/hooks/useCurriculumContent";
 import { getAdaptiveLessonRecommendation } from "@/src/services/adaptive/practicePlan";
 import { getLocalDateKey, useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
@@ -28,6 +27,9 @@ export default function LearnHome() {
     lessonAttempts,
     drillResults,
   } = useAppStore();
+  const {
+    curriculum: { modules, lessons, lessonSkillProfiles },
+  } = useCurriculumContent();
   const todayMinutes = dailyProgressDate === getLocalDateKey() ? minutesToday : 0;
   const orderedLessonIds = modules.flatMap((module) => module.lessonIds);
   const moduleById = new Map(modules.map((module) => [module.id, module]));
@@ -41,7 +43,7 @@ export default function LearnHome() {
       !skippedModules.includes(lesson.moduleId),
   );
   const lessonModuleById = new Map(orderedLessons.map((lesson) => [lesson.id, lesson.moduleId]));
-  const lessonSkillTagsById = new Map(orderedLessons.map((lesson) => [lesson.id, getLessonSkillTags(lesson.id)]));
+  const lessonSkillTagsById = new Map(orderedLessons.map((lesson) => [lesson.id, lessonSkillProfiles[lesson.id] ?? []]));
   const adaptiveRecommendation = getAdaptiveLessonRecommendation({
     feedbackHistory,
     mistakes,

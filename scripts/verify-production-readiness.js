@@ -209,21 +209,21 @@ function verifyNativeMicrophonePermissionCopy() {
   }
 }
 
-function verifyLiveRealtimeNotRequired() {
+function verifyLiveRealtimeReady() {
   const appJsonText = existsFile("app.json") ? readText(path.join(repoRoot, "app.json")) : "";
   const envExampleNames = existsFile(".env.example") ? new Set(getAssignedEnvNames(path.join(repoRoot, ".env.example"))) : new Set();
   const clientEntrypoint = existsFile("app/(tabs)/speak/index.tsx") ? readText(path.join(repoRoot, "app/(tabs)/speak/index.tsx")) : "";
+  const liveScreen = existsFile("app/(tabs)/speak/live.tsx") ? readText(path.join(repoRoot, "app/(tabs)/speak/live.tsx")) : "";
+  const liveServer = existsFile("server/dev-server.js") ? readText(path.join(repoRoot, "server/dev-server.js")) : "";
 
   const mentionsRealtime = appJsonText.includes("react-native-webrtc") || envExampleNames.has("EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT");
-  const visibleAsOptional =
-    /paused|disabled|out of scope|not required|optional|fallback|Start live conversation|Live conversation/i.test(clientEntrypoint) ||
-    /EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT/.test(appJsonText) ||
-    envExampleNames.has("EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT");
+  if (!mentionsRealtime) addFailure("Live conversation requires react-native-webrtc and EXPO_PUBLIC_REALTIME_SESSION_ENDPOINT configuration.");
+  if (!clientEntrypoint.includes('router.push("/speak/live")')) addFailure("Speak home must expose Live conversation.");
+  if (!liveScreen.includes("connectLiveWebRtc") || !liveScreen.includes("connectLiveWebSocket")) addFailure("Live screen must support the Realtime voice transports.");
+  if (!liveServer.includes("/v1/realtime/calls") || !liveServer.includes("gpt-realtime-2.1")) addFailure("Live server must use the current Realtime WebRTC call flow.");
 
-  if (mentionsRealtime && !visibleAsOptional) {
-    addFailure("Live/realtime feature appears configured but is not visibly optional, paused, or excluded from this readiness check.");
-  } else {
-    addPass("Live/realtime feature is not required by production readiness verification.");
+  if (mentionsRealtime && clientEntrypoint.includes('router.push("/speak/live")') && liveScreen.includes("connectLiveWebRtc") && liveScreen.includes("connectLiveWebSocket") && liveServer.includes("/v1/realtime/calls") && liveServer.includes("gpt-realtime-2.1")) {
+    addPass("Live conversation is a production voice-practice path with Realtime WebRTC and simulator fallback.");
   }
 }
 
@@ -232,7 +232,7 @@ function run() {
   verifyOAuthIsNotActiveProductionScope();
   verifyEnvExampleSupabasePlaceholders();
   verifyNativeMicrophonePermissionCopy();
-  verifyLiveRealtimeNotRequired();
+  verifyLiveRealtimeReady();
 
   if (failures.length > 0) {
     console.error("Production readiness verification failed:");

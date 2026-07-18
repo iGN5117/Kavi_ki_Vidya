@@ -1,5 +1,6 @@
-import { lessons } from "@/src/content/lessons";
 import { getLearnerPracticePlan } from "@/src/services/adaptive/practicePlan";
+import { getBundledCurriculum } from "@/src/services/content/curriculumClient";
+import type { CurriculumContent } from "@/src/types/content";
 import type { ConversationTurn, PracticeSessionReceipt, SpeakingFeedback } from "@/src/types/speaking";
 import { isPronunciationClear, normalizePronunciationScore } from "@/shared/scoringPolicy";
 
@@ -80,7 +81,7 @@ function getRetrySentence(feedback: SpeakingFeedback, bestSentence: string | und
   return "Today I feel good.";
 }
 
-function getNextStepLesson(feedback: SpeakingFeedback) {
+function getNextStepLesson(feedback: SpeakingFeedback, curriculum: CurriculumContent) {
   const focus = getLearnerPracticePlan({
     feedbackHistory: [feedback],
     mistakes: feedback.mistakes,
@@ -93,7 +94,7 @@ function getNextStepLesson(feedback: SpeakingFeedback) {
       ? "greetings-intro"
       : "neighbor-small-talk";
   const lessonId = focus?.recommendedLessonId ?? fallbackLessonId;
-  const lesson = lessons.find((item) => item.id === lessonId);
+  const lesson = curriculum.lessons.find((item) => item.id === lessonId);
 
   if (!lesson) return undefined;
 
@@ -108,6 +109,7 @@ export function buildPracticeSessionReceipt(
   feedback: SpeakingFeedback,
   turns: ConversationTurn[],
   completedAt = new Date().toISOString(),
+  curriculum = getBundledCurriculum(),
 ): PracticeSessionReceipt {
   const userTurns = getUserTurns(turns);
   const bestSentence = getBestSentence(turns);
@@ -129,13 +131,17 @@ export function buildPracticeSessionReceipt(
       : {}),
     ...(pronunciationScore === undefined ? {} : { pronunciationScore }),
     retrySentence: getRetrySentence(feedback, bestSentence, grammarFix),
-    nextStepLesson: getNextStepLesson(feedback),
+    nextStepLesson: getNextStepLesson(feedback, curriculum),
   };
 }
 
-export function attachPracticeSessionReceipt(feedback: SpeakingFeedback, turns: ConversationTurn[]): SpeakingFeedback {
+export function attachPracticeSessionReceipt(
+  feedback: SpeakingFeedback,
+  turns: ConversationTurn[],
+  curriculum = getBundledCurriculum(),
+): SpeakingFeedback {
   return {
     ...feedback,
-    sessionReceipt: buildPracticeSessionReceipt(feedback, turns),
+    sessionReceipt: buildPracticeSessionReceipt(feedback, turns, new Date().toISOString(), curriculum),
   };
 }

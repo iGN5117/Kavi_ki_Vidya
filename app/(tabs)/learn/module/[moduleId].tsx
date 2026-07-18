@@ -5,8 +5,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { PrimaryActionButton } from "@/src/components/PrimaryActionButton";
 import { Screen } from "@/src/components/Screen";
 import { SkipConfirmationSheet } from "@/src/components/SkipConfirmationSheet";
-import { lessons } from "@/src/content/lessons";
-import { modules } from "@/src/content/modules";
+import { useCurriculumContent } from "@/src/hooks/useCurriculumContent";
 import { useAppStore } from "@/src/store/useAppStore";
 import { colors, radii, spacing } from "@/src/theme/theme";
 
@@ -14,13 +13,16 @@ export default function ModuleDetail() {
   const { moduleId } = useLocalSearchParams<{ moduleId: string }>();
   const [skipVisible, setSkipVisible] = useState(false);
   const { skippedModules, skipModule, completedLessons, skippedLessons, skipLesson } = useAppStore();
+  const {
+    curriculum: { modules, lessons },
+  } = useCurriculumContent();
   const module = modules.find((item) => item.id === moduleId) ?? modules[0];
   const moduleLessons = useMemo(
     () =>
       module.lessonIds
         .map((lessonId) => lessons.find((lesson) => lesson.id === lessonId))
         .filter((lesson): lesson is (typeof lessons)[number] => Boolean(lesson)),
-    [module.lessonIds],
+    [lessons, module.lessonIds],
   );
   const isSkipped = skippedModules.includes(module.id);
   const completedCount = moduleLessons.filter((lesson) => completedLessons.includes(lesson.id)).length;

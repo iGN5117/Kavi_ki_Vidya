@@ -137,6 +137,14 @@ export type LearningModule = {
   lessonIds: string[];
 };
 
+export type CurriculumContent = {
+  version?: string;
+  updatedAt?: string;
+  modules: LearningModule[];
+  lessons: Lesson[];
+  lessonSkillProfiles: Record<string, LessonSkillTag[]>;
+};
+
 export type Scenario = {
   id: string;
   title: string;

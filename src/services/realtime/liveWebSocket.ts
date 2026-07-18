@@ -5,7 +5,7 @@ type LiveWebSocketOptions = LiveWebRtcOptions & {
   turnDetection?: "manual" | "server_vad";
 };
 
-export async function connectLiveWebSocket({ instructions, onEvent, turnDetection = "manual" }: LiveWebSocketOptions): Promise<LiveWebRtcConnection> {
+export async function connectLiveWebSocket({ instructions, onEvent, turnDetection = "server_vad" }: LiveWebSocketOptions): Promise<LiveWebRtcConnection> {
   const endpoint = getRealtimeWebSocketEndpoint(instructions, { turnDetection });
   if (!endpoint) {
     throw new Error("Live conversation needs the local Realtime WebSocket endpoint.");

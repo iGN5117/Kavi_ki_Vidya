@@ -15,8 +15,7 @@ import { MeaningPanel } from "@/src/components/MeaningPanel";
 import { PrimaryActionButton } from "@/src/components/PrimaryActionButton";
 import { Screen } from "@/src/components/Screen";
 import { SkipConfirmationSheet } from "@/src/components/SkipConfirmationSheet";
-import { lessons, getLesson } from "@/src/content/lessons";
-import { modules } from "@/src/content/modules";
+import { useCurriculumContent } from "@/src/hooks/useCurriculumContent";
 import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
 import { getLocalizedSupportLines, getPronunciationHelpSupport, getPronunciationSupport } from "@/src/services/i18n/languageSupport";
 import { checkLessonPronunciation, createLessonAudio } from "@/src/services/realtime/realtimeClient";
@@ -27,7 +26,6 @@ import type { ExplanationPreference, LessonActivity, LocalizedSupport } from "@/
 import type { PronunciationCheckResult } from "@/src/types/speaking";
 import { isPronunciationClear, normalizePronunciationScore } from "@/shared/scoringPolicy";
 
-const orderedLessonIds = modules.flatMap((module) => module.lessonIds);
 const pronunciationRecordingOptions = {
   ...RecordingPresets.HIGH_QUALITY,
   extension: ".wav",
@@ -57,7 +55,14 @@ type PronunciationStatus = "idle" | "loading-model" | "model-ready" | "recording
 
 export default function LessonScreen() {
   const { lessonId } = useLocalSearchParams<{ lessonId: string }>();
-  const lesson = useMemo(() => getLesson(lessonId) ?? getLesson("greetings-intro")!, [lessonId]);
+  const {
+    curriculum: { modules, lessons },
+  } = useCurriculumContent();
+  const lesson = useMemo(
+    () => lessons.find((item) => item.id === lessonId) ?? lessons.find((item) => item.id === "greetings-intro") ?? lessons[0],
+    [lessonId, lessons],
+  );
+  const orderedLessonIds = useMemo(() => modules.flatMap((module) => module.lessonIds), [modules]);
   const recorder = useAudioRecorder(pronunciationRecordingOptions);
   const recorderState = useAudioRecorderState(recorder);
   const modelAudioPlayback = usePlayableAudio({ label: "learn-model" });
@@ -127,7 +132,7 @@ export default function LessonScreen() {
           !skippedLessons.includes(candidate.id) &&
           !skippedModules.includes(candidate.moduleId),
       );
-  }, [completedLessons, lesson.id, skippedLessons, skippedModules]);
+  }, [completedLessons, lesson.id, lessons, orderedLessonIds, skippedLessons, skippedModules]);
   const activityResults = useMemo(
     () => Object.values(activityResultsByIndex).sort((left, right) => left.activityIndex - right.activityIndex),
     [activityResultsByIndex],

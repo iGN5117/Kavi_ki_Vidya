@@ -20,20 +20,20 @@
     "hash": "6819aca830395140f10ff42ba32a34e9"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/learn/index.tsx": {
-    "mtime": 1780802892.5007353,
-    "hash": "f3ffce1d324e5e61ca7a6a1d919aad20"
+    "mtime": 1783311694.930567,
+    "hash": "4f8d1ff3978ca90d0570a5d56244c00e"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/learn/_layout.tsx": {
     "mtime": 1777420786.1402802,
     "hash": "88ff554cf4df99fc307a8b6bad7ff8ff"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/learn/module/[moduleId].tsx": {
-    "mtime": 1778382695.7628858,
-    "hash": "25cff1cff6287621996d0f7bfb94f1b0"
+    "mtime": 1783311704.0283597,
+    "hash": "e30c796788c1953c458176d9a18b49fd"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/learn/lesson/[lessonId].tsx": {
-    "mtime": 1783296303.9986308,
-    "hash": "8f8fe22145aa7e749d1bcec3eb709a7b"
+    "mtime": 1783311714.766422,
+    "hash": "059c143a5a7f3fa5612d41585b6417a9"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/speak/index.tsx": {
     "mtime": 1780800313.9119058,
@@ -44,8 +44,8 @@
     "hash": "b93c5b675d2dd643f4a29a67e21ab987"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/speak/conversation.tsx": {
-    "mtime": 1783296384.3136203,
-    "hash": "966bc7d29f9fd680d7fef9bb4aa3122e"
+    "mtime": 1783311735.4436874,
+    "hash": "ddbb39c7eda50cf14c57c35f1cf850e8"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/speak/_layout.tsx": {
     "mtime": 1777576456.0853271,
@@ -56,8 +56,8 @@
     "hash": "abc6559187a9ecfacceb4c56796ee1e4"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/speak/live.tsx": {
-    "mtime": 1777600019.1759825,
-    "hash": "6df2dfd3590e6fd0d7ec04f5f6ee9a4e"
+    "mtime": 1784341588.6830852,
+    "hash": "e04a86bcce069cb8b4894fbb19bc9683"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/app/(tabs)/profile/index.tsx": {
     "mtime": 1780801976.4949882,
@@ -80,8 +80,8 @@
     "hash": "368c2d5bc1ea37b87a4b3c6fb2436803"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/dev-server.js": {
-    "mtime": 1783296261.984223,
-    "hash": "3c9779ec1a997e36e0475a5708e59205"
+    "mtime": 1784341588.306133,
+    "hash": "6b6b4b4c83fbcddba06f0fb666a419ec"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/server/progress-store.js": {
     "mtime": 1777501462.1939101,
@@ -65236,8 +65236,8 @@
     "hash": "b0a107a1839c81348941c88b0e924117"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/scripts/verify-production-readiness.js": {
-    "mtime": 1778384265.329946,
-    "hash": "60cdbce7350421a3cb8c9c689a19928d"
+    "mtime": 1784341588.775802,
+    "hash": "2fcb5eac14ada1bc643f42942b7bb0a2"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/scripts/generate-voice-samples.js": {
     "mtime": 1781379751.8326719,
@@ -65256,16 +65256,16 @@
     "hash": "7216666a395f3cd4dea40def5842200a"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/scripts/verify-content.js": {
-    "mtime": 1778383495.7542326,
-    "hash": "7eeb9a88515315e715860fe39252131d"
+    "mtime": 1783311747.2797914,
+    "hash": "374300695a45a7a0307b0ba52eb8748c"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/types/speaking.ts": {
     "mtime": 1783295795.878895,
     "hash": "d3887eb324c86db0bfae7a9b9a9826ac"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/types/content.ts": {
-    "mtime": 1778383513.8388693,
-    "hash": "e9897150bb7d462be80e9a51a85f0b94"
+    "mtime": 1783311634.4711993,
+    "hash": "efe3b57ad968343b8aef55cbd4eff562"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/navigation/tabBarStyle.ts": {
     "mtime": 1777550282.2014327,
@@ -65363,6 +65363,10 @@
     "mtime": 1777420526.724083,
     "hash": "269a9eb67a1971cf59e71c71e1f42510"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/hooks/useCurriculumContent.ts": {
+    "mtime": 1783311685.525871,
+    "hash": "af1a65811808b3f8253aee99c8d81aa4"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/hooks/usePlayableAudio.ts": {
     "mtime": 1781360686.4599311,
     "hash": "c662af0ce3b57a9e25633a1bbda196ff"
@@ -65371,13 +65375,17 @@
     "mtime": 1777500756.4936206,
     "hash": "84686598e24067c1628e843cf1bb49ac"
   },
+  "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/content/curriculumClient.ts": {
+    "mtime": 1783311855.3842053,
+    "hash": "c4fe6f84586e67194406212aea33a889"
+  },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/feedback/sampleFeedback.ts": {
     "mtime": 1783295910.0576718,
     "hash": "246d7beab45ef320becea37b535c9cf2"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/feedback/sessionReceipt.ts": {
-    "mtime": 1783295917.4139688,
-    "hash": "1c03ab9bc729eb1bb0cfa1c5c94f563d"
+    "mtime": 1783311723.8973563,
+    "hash": "8dc27ac14d495a6cc9bdd532bc72af5d"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/supabase/client.ts": {
     "mtime": 1778385900.8475816,
@@ -65388,16 +65396,16 @@
     "hash": "0aa416d73be5f0e6fbd0177ccf60e660"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/realtime/liveWebRtc.native.ts": {
-    "mtime": 1777583535.1571314,
-    "hash": "e487ed5ca47ab040bd872d7ce4fae7c2"
+    "mtime": 1784341588.493505,
+    "hash": "eb39940687d2fc002aa2d1b19d587369"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/realtime/sessionConfig.ts": {
     "mtime": 1777582513.4427733,
     "hash": "2ac20dd31938550b8ca800c6346e86c5"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/realtime/liveWebSocket.ts": {
-    "mtime": 1777599882.880402,
-    "hash": "9418e2249df56138bf75b1ea9ca11ab0"
+    "mtime": 1784341588.588387,
+    "hash": "e866746bfa331583e6ff72072de53241"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/src/services/realtime/liveWebRtc.web.ts": {
     "mtime": 1777580766.0607853,
@@ -65436,8 +65444,8 @@
     "hash": "0d5c339dea4db41e4515cfd0d702c4f0"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/AGENTS.md": {
-    "mtime": 1783310675.8936346,
-    "hash": "691bfa0c60b5bd0c6dba5ad8b8026b4c"
+    "mtime": 1784341305.0861936,
+    "hash": "53e842ac7b85868c119eb3e2e90e9cc5"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/claude_feedback/01-product-review.md": {
     "mtime": 1783277821.649313,
@@ -65472,8 +65480,8 @@
     "hash": "c647122d0d2c1411e7048c1174a059e6"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/docs/technical/implementation-plan.md": {
-    "mtime": 1777765299.7214878,
-    "hash": "3310ba61387aa30174a251dd545acd97"
+    "mtime": 1784341588.8670204,
+    "hash": "1a85c82308e6a27a885d3043b0028a33"
   },
   "/Users/nileshgajwani/Personal_Projects/English_Learning_App_Codex/docs/technical/backend.md": {
     "mtime": 1783048171.929901,

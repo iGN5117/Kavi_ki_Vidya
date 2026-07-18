@@ -16,8 +16,19 @@
               "icon": "lucide-git-fork",
               "title": "Graph view"
             }
+          },
+          {
+            "id": "5ee90c99a7fa2c23",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -176,7 +187,7 @@
       "bases:Create new base": false
     }
   },
-  "active": "9a3c395f3704bd49",
+  "active": "5ee90c99a7fa2c23",
   "lastOpenFiles": [
     "_COMMUNITY_adaptive_practiceplan_getlearnerpracticeplan.md",
     "PracticeSessionReceipt.md",

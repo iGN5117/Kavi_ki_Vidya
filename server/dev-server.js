@@ -46,6 +46,9 @@ const defaultTtsInstructions =
   "Speak as a warm Indian English woman coach for adult learners. Use a calm, clear, natural Indian English accent, medium-slow pace, and gentle encouragement. Do not exaggerate the accent.";
 let openaiLastError = null;
 const progressStorageDir = path.join("server", "tmp", "progress");
+const curriculumContentPath = path.resolve(
+  process.env.CURRICULUM_CONTENT_PATH || path.join(__dirname, "content", "curriculum.json")
+);
 const authSessions = new Map();
 const authSessionTtlMs = 24 * 60 * 60 * 1000;
 const progressRepository = createProgressRepository({
@@ -129,6 +132,16 @@ app.get("/health", (_request, response) => {
       gitCommit: process.env.RENDER_GIT_COMMIT || null,
     },
   });
+});
+
+app.get("/api/curriculum", (_request, response) => {
+  try {
+    response.json(readCurriculumContent());
+  } catch (error) {
+    response.status(503).json({
+      error: error instanceof Error ? error.message : "Curriculum content is unavailable.",
+    });
+  }
 });
 
 app.post("/api/auth/dev-session", (request, response) => {
@@ -408,6 +421,87 @@ const pronunciationCheckJsonSchema = {
     },
   },
 };
+
+function isPlainObject(value) {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function validateCurriculumContent(payload) {
+  const errors = [];
+  if (!isPlainObject(payload)) return ["Curriculum payload must be a JSON object."];
+
+  if (!Array.isArray(payload.modules) || payload.modules.length === 0) {
+    errors.push("Curriculum payload must include a non-empty modules array.");
+  }
+  if (!Array.isArray(payload.lessons) || payload.lessons.length === 0) {
+    errors.push("Curriculum payload must include a non-empty lessons array.");
+  }
+  if (!isPlainObject(payload.lessonSkillProfiles)) {
+    errors.push("Curriculum payload must include a lessonSkillProfiles object.");
+  }
+  if (errors.length) return errors;
+
+  const moduleIds = new Set();
+  const lessonIds = new Set();
+  payload.modules.forEach((learningModule, index) => {
+    if (!learningModule?.id || typeof learningModule.id !== "string") {
+      errors.push(`Module at index ${index} must have an id.`);
+      return;
+    }
+    if (moduleIds.has(learningModule.id)) errors.push(`Duplicate module id "${learningModule.id}".`);
+    moduleIds.add(learningModule.id);
+  });
+
+  payload.lessons.forEach((lesson, index) => {
+    if (!lesson?.id || typeof lesson.id !== "string") {
+      errors.push(`Lesson at index ${index} must have an id.`);
+      return;
+    }
+    if (lessonIds.has(lesson.id)) errors.push(`Duplicate lesson id "${lesson.id}".`);
+    lessonIds.add(lesson.id);
+  });
+
+  payload.modules.forEach((learningModule) => {
+    if (!Array.isArray(learningModule?.lessonIds)) {
+      errors.push(`Module "${learningModule?.id || "unknown"}" must have lessonIds.`);
+      return;
+    }
+    learningModule.lessonIds.forEach((lessonId) => {
+      if (!lessonIds.has(lessonId)) errors.push(`Module "${learningModule.id}" references missing lesson "${lessonId}".`);
+    });
+  });
+
+  payload.lessons.forEach((lesson) => {
+    if (!moduleIds.has(lesson?.moduleId)) errors.push(`Lesson "${lesson?.id || "unknown"}" references missing moduleId "${lesson?.moduleId}".`);
+    if (!lesson?.id || typeof lesson.id !== "string") return;
+    if (!Array.isArray(payload.lessonSkillProfiles[lesson.id]) || payload.lessonSkillProfiles[lesson.id].length === 0) {
+      errors.push(`Lesson "${lesson.id}" must have at least one skill profile tag.`);
+    }
+  });
+
+  Object.keys(payload.lessonSkillProfiles).forEach((lessonId) => {
+    if (!lessonIds.has(lessonId)) errors.push(`lessonSkillProfiles references missing lesson "${lessonId}".`);
+  });
+
+  return errors;
+}
+
+function readCurriculumContent() {
+  const stat = fs.statSync(curriculumContentPath);
+  const payload = JSON.parse(fs.readFileSync(curriculumContentPath, "utf8"));
+  const validationErrors = validateCurriculumContent(payload);
+  if (validationErrors.length) {
+    throw new Error(`Curriculum content is invalid: ${validationErrors.slice(0, 3).join(" ")}`);
+  }
+
+  return {
+    version: clampText(payload.version, `file-${Math.round(stat.mtimeMs)}`, 80),
+    updatedAt: clampText(payload.updatedAt, stat.mtime.toISOString(), 40),
+    modules: payload.modules,
+    lessons: payload.lessons,
+    lessonSkillProfiles: payload.lessonSkillProfiles,
+  };
+}
 
 function clampText(value, fallback = "", maxLength = 500) {
   if (typeof value !== "string") return fallback;
@@ -899,17 +993,15 @@ function createRealtimeSessionConfig(instructions, options = {}) {
     options.turnDetection === "manual"
       ? null
       : {
-          type: "server_vad",
-          threshold: 0.72,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 850,
-          create_response: false,
-          interrupt_response: false,
+          type: "semantic_vad",
+          eagerness: "low",
+          create_response: true,
+          interrupt_response: true,
         };
 
   return {
     type: "realtime",
-    model: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime",
+    model: process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1",
     output_modalities: ["audio"],
     instructions: withTeachingStructureInstructions(instructions),
     audio: {
@@ -929,7 +1021,7 @@ function createRealtimeSessionConfig(instructions, options = {}) {
           type: "audio/pcm",
           rate: outputRate,
         },
-        voice: process.env.OPENAI_REALTIME_VOICE || "alloy",
+        voice: process.env.OPENAI_REALTIME_VOICE || "marin",
       },
     },
   };
@@ -2465,13 +2557,13 @@ app.post("/api/realtime/session", async (request, response) => {
       "You are a supportive English speaking coach.",
       2000
     );
-    const sessionResponse = await fetch("https://api.openai.com/v1/realtime/sessions", {
+    const sessionResponse = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(createRealtimeSessionConfig(instructions)),
+      body: JSON.stringify({ session: createRealtimeSessionConfig(instructions) }),
     });
 
     const payload = await sessionResponse.json();
@@ -2481,9 +2573,9 @@ app.post("/api/realtime/session", async (request, response) => {
     }
 
     response.json({
-      clientSecret: payload.client_secret?.value,
-      expiresAt: payload.client_secret?.expires_at,
-      model: payload.model,
+      clientSecret: payload.value || payload.client_secret?.value,
+      expiresAt: payload.expires_at || payload.client_secret?.expires_at,
+      model: payload.session?.model || payload.model,
     });
   } catch (error) {
     response.status(500).json({ error: error instanceof Error ? error.message : "Realtime session failed." });
@@ -2781,7 +2873,7 @@ function getRealtimeWebSocketTurnDetection(request) {
 }
 
 function getRealtimeWebSocketUrl() {
-  const model = encodeURIComponent(process.env.OPENAI_REALTIME_MODEL || "gpt-realtime");
+  const model = encodeURIComponent(process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1");
   return `wss://api.openai.com/v1/realtime?model=${model}`;
 }
 

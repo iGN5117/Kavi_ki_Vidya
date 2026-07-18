@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ConversationBubble } from "@/src/components/ConversationBubble";
 import { Screen } from "@/src/components/Screen";
 import { scenarios } from "@/src/content/scenarios";
+import { useCurriculumContent } from "@/src/hooks/useCurriculumContent";
 import { usePlayableAudio } from "@/src/hooks/usePlayableAudio";
 import { getTabBarStyle } from "@/src/navigation/tabBarStyle";
 import { buildLocalFeedback, personalizeFeedbackWithTurnPronunciation } from "@/src/services/feedback/sampleFeedback";
@@ -214,6 +215,7 @@ export default function ConversationScreen() {
   const scenario = scenarios.find((item) => item.id === params.scenarioId);
   const practiceDrill = useMemo(() => getPracticeDrill(params), [params.practiceDetail, params.practiceItemId, params.practicePrompt, params.practiceSource]);
   const verifyAudioText = typeof params.verifyAudioText === "string" ? params.verifyAudioText.trim() : "";
+  const { curriculum } = useCurriculumContent();
   const addSpeakingFeedback = useAppStore((state) => state.addSpeakingFeedback);
   const addDrillResult = useAppStore((state) => state.addDrillResult);
   const savedPhrases = useAppStore((state) => state.savedPhrases);
@@ -583,6 +585,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
       const feedback = attachPracticeSessionReceipt(
         personalizeFeedbackWithTurnPronunciation(await generateSessionFeedback(sessionTurns, practiceContext), sessionTurns),
         sessionTurns,
+        curriculum,
       );
       addSpeakingFeedback(feedback);
       if (practiceDrill && learnerTurnCount > 0) {
@@ -593,6 +596,7 @@ If the learner uses Hindi or Hinglish, help her return to this exact English tar
       const fallbackFeedback = attachPracticeSessionReceipt(
         personalizeFeedbackWithTurnPronunciation(buildLocalFeedback(sessionTurns), sessionTurns),
         sessionTurns,
+        curriculum,
       );
       addSpeakingFeedback(fallbackFeedback);
       if (practiceDrill && learnerTurnCount > 0) {

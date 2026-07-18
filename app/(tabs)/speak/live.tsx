@@ -46,6 +46,7 @@ export default function LiveConversationScreen() {
   const isListeningRef = useRef(false);
   const liveStateRef = useRef<LiveState>("idle");
   const userMutedRef = useRef(true);
+  const shouldListenAfterCoachRef = useRef(true);
   const connectedLoggedRef = useRef(false);
   const simulatorAudioChunkCountRef = useRef(0);
   const simulatorTurnCommittedRef = useRef(false);
@@ -122,6 +123,7 @@ export default function LiveConversationScreen() {
     setResponsePending(false);
     isListeningRef.current = false;
     userMutedRef.current = true;
+    shouldListenAfterCoachRef.current = true;
     connectedLoggedRef.current = false;
     simulatorAudioChunkCountRef.current = 0;
     simulatorTurnCommittedRef.current = false;
@@ -228,8 +230,8 @@ export default function LiveConversationScreen() {
     connectionRef.current?.setMuted(userMutedRef.current || assistantSpeakingRef.current);
   }
 
-  function startLearnerTurn() {
-    if (liveState !== "live" || responsePendingRef.current || assistantSpeakingRef.current) return;
+  function resumeLiveListening() {
+    if (!connectionRef.current || liveStateRef.current !== "live" || responsePendingRef.current || assistantSpeakingRef.current) return;
     if (isIosSimulator) {
       void startSimulatorStreaming();
       return;
@@ -243,25 +245,22 @@ export default function LiveConversationScreen() {
     addLog("system", "Listening...");
   }
 
-  function finishLearnerTurn(shouldRequestResponse: boolean) {
+  function startLearnerTurn() {
+    shouldListenAfterCoachRef.current = true;
+    resumeLiveListening();
+  }
+
+  function pauseLearnerTurn() {
+    shouldListenAfterCoachRef.current = false;
     isListeningRef.current = false;
     userMutedRef.current = true;
     setIsListening(false);
     applyTransportMute();
-    if (shouldRequestResponse) {
-      requestCoachResponse();
-    }
-  }
-
-  function sendLearnerTurn() {
+    sendEvent({ type: "input_audio_buffer.clear" });
     if (isIosSimulator) {
-      void stopSimulatorStreaming({ commitTurn: true });
-      return;
+      void stopSimulatorStreaming({ commitTurn: false });
     }
-    userMutedRef.current = true;
-    setIsListening(false);
-    applyTransportMute();
-    sendEvent({ type: "input_audio_buffer.commit" });
+    addLog("system", "Microphone paused.");
   }
 
   function setAssistantSpeaking(isSpeaking: boolean) {
@@ -294,9 +293,11 @@ export default function LiveConversationScreen() {
     restoreMicTimeoutRef.current = setTimeout(() => {
       assistantSpeakingRef.current = false;
       setIsAssistantSpeakingState(false);
-      applyTransportMute();
-      if (isIosSimulator && connectionRef.current && liveStateRef.current === "live") {
-        void startSimulatorStreaming();
+      if (shouldListenAfterCoachRef.current) {
+        userMutedRef.current = false;
+        resumeLiveListening();
+      } else {
+        applyTransportMute();
       }
       restoreMicTimeoutRef.current = null;
     }, 350);
@@ -340,24 +341,12 @@ export default function LiveConversationScreen() {
 
     if (event.type === "input_audio_buffer.speech_started") {
       learnerDraftRef.current = "";
-      if (!isIosSimulator && (!isListeningRef.current || assistantSpeakingRef.current || responsePendingRef.current)) {
-        sendEvent({ type: "input_audio_buffer.clear" });
-        finishLearnerTurn(false);
-      }
       return;
     }
 
     if (event.type === "conversation.item.input_audio_transcription.completed") {
       const transcript = event.transcript || "";
-      if (!isIosSimulator && !isListeningRef.current && !transcript.trim()) return;
-      if (!isIosSimulator && !isListeningRef.current && transcript.trim()) {
-        sendEvent({ type: "input_audio_buffer.clear" });
-        return;
-      }
       addLog("learner", transcript);
-      if (!isIosSimulator && transcript.trim() && !assistantSpeakingRef.current && !responsePendingRef.current) {
-        finishLearnerTurn(true);
-      }
       return;
     }
 
@@ -366,15 +355,6 @@ export default function LiveConversationScreen() {
         simulatorTurnCommittedRef.current = true;
         clearSimulatorSilenceTimer();
         clearSimulatorCommitFallbackTimer();
-        requestCoachResponse();
-        return;
-      }
-      if (!isListeningRef.current) {
-        sendEvent({ type: "input_audio_buffer.clear" });
-        return;
-      }
-      if (!assistantSpeakingRef.current && !responsePendingRef.current) {
-        finishLearnerTurn(true);
       }
       return;
     }
@@ -424,7 +404,7 @@ export default function LiveConversationScreen() {
         ? await connectLiveWebSocket({
             instructions,
             onEvent: handleRealtimeEvent,
-            turnDetection: "manual",
+            turnDetection: "server_vad",
           })
         : await connectLiveWebRtc({
             instructions,
@@ -434,6 +414,7 @@ export default function LiveConversationScreen() {
       if (isIosSimulator) {
         attachLivePcmListeners();
       }
+      shouldListenAfterCoachRef.current = true;
       userMutedRef.current = true;
       isListeningRef.current = false;
       connection.setMuted(true);
@@ -535,7 +516,7 @@ export default function LiveConversationScreen() {
 
   const isMicBusy = isResponsePending || isAssistantSpeaking;
   const statusLabel =
-    liveState === "live" ? (isMicBusy ? "Coach speaking" : isListening ? "Listening" : "Tap to speak") : liveState === "connecting" ? "Connecting" : liveState === "error" ? "Needs attention" : "Ready";
+    liveState === "live" ? (isMicBusy ? "Coach speaking" : isListening ? "Listening" : "Microphone paused") : liveState === "connecting" ? "Connecting" : liveState === "error" ? "Needs attention" : "Ready";
 
   useEffect(() => {
     if (params.autostartMic !== "1" || autoStartedMicRef.current || liveState !== "live" || isMicBusy || isListening) return;
@@ -556,9 +537,9 @@ export default function LiveConversationScreen() {
         <View style={[styles.statusIcon, liveState === "live" && styles.statusIconLive]}>
           <Radio color={liveState === "live" ? colors.surface : colors.primary} size={28} />
         </View>
-        <Text style={styles.eyebrow}>Realtime comparison</Text>
+        <Text style={styles.eyebrow}>Hands-free voice practice</Text>
         <Text style={styles.title}>Live conversation</Text>
-        <Text style={styles.copy}>Use this to compare against the turn-based Speak flow. Web, iOS, and Android builds use the same Realtime connection.</Text>
+        <Text style={styles.copy}>Talk naturally. Kavi waits while you finish, then responds with a short spoken reply.</Text>
         <Text style={[styles.status, liveState === "live" && styles.statusLive]}>{statusLabel}</Text>
       </View>
 
@@ -567,12 +548,12 @@ export default function LiveConversationScreen() {
           <>
             <Pressable
               accessibilityRole="button"
-              onPress={isListening ? sendLearnerTurn : startLearnerTurn}
+              onPress={isListening ? pauseLearnerTurn : startLearnerTurn}
               disabled={isMicBusy}
               style={[styles.controlButton, isListening && styles.controlButtonListening, isMicBusy && styles.controlButtonMuted]}
             >
               {isListening ? <MicOff color={colors.surface} size={22} /> : <Mic color={colors.surface} size={22} />}
-              <Text style={styles.controlText}>{isListening ? (isIosSimulator ? "Send turn" : "Mute mic") : "Start mic"}</Text>
+              <Text style={styles.controlText}>{isListening ? "Pause mic" : "Resume mic"}</Text>
             </Pressable>
             <Pressable accessibilityRole="button" onPress={disconnectLive} style={[styles.controlButton, styles.endButton]}>
               <PhoneOff color={colors.surface} size={22} />
@@ -605,7 +586,7 @@ export default function LiveConversationScreen() {
       </View>
 
       <Pressable accessibilityRole="button" onPress={() => router.push("/speak/conversation?mode=free")} style={styles.compareLink}>
-        <Text style={styles.compareText}>Open turn-based free chat</Text>
+        <Text style={styles.compareText}>Use turn-based free chat instead</Text>
       </Pressable>
     </Screen>
   );

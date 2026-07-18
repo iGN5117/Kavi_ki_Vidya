@@ -282,12 +282,34 @@ function validateContent({ modules, lessons, scenarios, lessonSkillProfiles }) {
   return errors;
 }
 
+function validateBackendCurriculum(filePath, scenarios) {
+  const absolutePath = path.resolve(repoRoot, filePath);
+  if (!fs.existsSync(absolutePath)) {
+    return [`${filePath} must exist so the backend can serve lessons from /api/curriculum.`];
+  }
+
+  let curriculum;
+  try {
+    curriculum = JSON.parse(fs.readFileSync(absolutePath, "utf8"));
+  } catch (error) {
+    return [`${filePath} must be valid JSON. ${error instanceof Error ? error.message : ""}`.trim()];
+  }
+
+  return validateContent({
+    modules: curriculum.modules,
+    lessons: curriculum.lessons,
+    scenarios,
+    lessonSkillProfiles: curriculum.lessonSkillProfiles,
+  }).map((error) => `${filePath}: ${error}`);
+}
+
 function main() {
   const { modules } = loadTsModule("src/content/modules.ts");
   const { lessons } = loadTsModule("src/content/lessons.ts");
   const { scenarios } = loadTsModule("src/content/scenarios.ts");
   const { lessonSkillProfiles } = loadTsModule("src/content/lessonSkillProfiles.ts");
   const errors = validateContent({ modules, lessons, scenarios, lessonSkillProfiles });
+  errors.push(...validateBackendCurriculum("server/content/curriculum.json", scenarios));
 
   if (errors.length > 0) {
     console.error(`Content verification failed with ${errors.length} issue${errors.length === 1 ? "" : "s"}:`);
